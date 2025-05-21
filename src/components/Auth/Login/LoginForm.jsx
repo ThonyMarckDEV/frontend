@@ -1,14 +1,16 @@
 import React from 'react';
-import { ShoppingBag, User, Lock } from 'lucide-react';
+import { ShoppingBag, User, Lock, LogIn } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
+import { toast, ToastContainer } from 'react-toastify';
 
-const LoginForm = ({ username, setUsername, password, setPassword, handleLogin, loading, rememberMe, setRememberMe }) => {
+const LoginForm = ({ username, setUsername, password, setPassword, handleLogin, handleGoogleLogin, loading, rememberMe, setRememberMe }) => {
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-sm">
       <div className="text-center mb-8">
         <div className="flex justify-center mb-4">
           <ShoppingBag className="h-12 w-12 text-pink-500" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-800">MelyMarckStore</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Elegancia</h1>
         <p className="mt-2 text-sm text-gray-600">Acceso a tu cuenta</p>
       </div>
       
@@ -93,10 +95,27 @@ const LoginForm = ({ username, setUsername, password, setPassword, handleLogin, 
                 </svg>
                 Cargando...
               </>
-            ) : 'Iniciar Sesión'}
+            ) : (
+              <>
+                <LogIn className="mr-2 h-4 w-4" />
+                Iniciar Sesión
+              </>
+            )}
           </button>
         </div>
       </form>
+
+      <div className="mt-4">
+        <GoogleLogin
+          onSuccess={handleGoogleLogin}
+          onError={() => {
+            toast.error('Error al iniciar sesión con Google');
+          }}
+          text="signin_with"
+          width="384"
+          logo_alignment="center"
+        />
+      </div>
       
       <div className="mt-6 text-center">
         <p className="text-xs text-gray-500">

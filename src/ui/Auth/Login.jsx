@@ -72,11 +72,8 @@ const Login = () => {
 
     if (rol === 'cliente') {
       toast.success('Login exitoso!!');
-      setTimeout(() => navigate('/cliente'), 1500);
-    } else if (rol === 'manager') {
-      toast.success('Login exitoso!!');
-      setTimeout(() => navigate('/encargado'), 1500);
-    } else if (rol === 'admin') {
+      setTimeout(() => navigate('/'), 1500);
+    }else if (rol === 'admin') {
       toast.success('Login exitoso!!');
       setTimeout(() => navigate('/admin'), 1500);
     } else {
