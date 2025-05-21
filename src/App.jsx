@@ -22,10 +22,11 @@ import Login from './ui/Auth/Login';
 
 
 // UIS Cliente
+import Config from './ui/Cliente/ConfigUI/Config';
 
 // Utilities
 import ProtectedRouteHome from './utilities/ProtectedRouteHome';
-
+import ProtectedRouteCliente from './utilities/ProtectedRouteCliente';
 
 
 function AppContent() {
@@ -37,6 +38,9 @@ function AppContent() {
 
       <Route path="/login"  element={<ProtectedRouteHome element={<Login />}  />} />
 
+      {/* Rutas Cliente */}
+
+      <Route path="/settings" element={<ProtectedRouteCliente element={<Config />} />}  />
 
       {/* Ruta de error */}
       <Route path="/*" element={<ErrorPage />} />
