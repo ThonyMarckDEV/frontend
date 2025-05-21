@@ -29,17 +29,11 @@ const Navbar = () => {
           </div>
           
           <div className="hidden md:flex space-x-8">
-            <a href="#" className="text-gray-700 hover:text-pink-500 transition">Inicio</a>
-            {/* <a href="#" className="text-gray-700 hover:text-pink-500 transition">Ropa</a> */}
-            <a href="#" className="text-gray-700 hover:text-pink-500 transition">Maquillaje</a>
-            <a href="#" className="text-gray-700 hover:text-pink-500 transition">Accesorios</a>
-            <a href="#" className="text-gray-700 hover:text-pink-500 transition">Contacto</a>
+            <a href="/" className="text-gray-700 hover:text-pink-500 transition">Inicio</a>
+            <a href="/products" className="text-gray-700 hover:text-pink-500 transition">Productos</a>
           </div>
           
           <div className="flex items-center space-x-4">
-            <button className="text-gray-700 hover:text-pink-500">
-              <Search size={20} />
-            </button>
             <button className="text-gray-700 hover:text-pink-500">
               <Heart size={20} />
             </button>
@@ -77,11 +71,8 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden pt-4 pb-2 border-t mt-4">
             <div className="flex flex-col space-y-3">
-              <a href="#" className="text-gray-700 hover:text-pink-500 transition py-2">Inicio</a>
-              {/* <a href="#" className="text-gray-700 hover:text-pink-500 transition py-2">Ropa</a> */}
-              <a href="#" className="text-gray-700 hover:text-pink-500 transition py-2">Maquillaje</a>
-              <a href="#" className="text-gray-700 hover:text-pink-500 transition py-2">Accesorios</a>
-              <a href="#" className="text-gray-700 hover:text-pink-500 transition py-2">Contacto</a>
+              <a href="/" className="text-gray-700 hover:text-pink-500 transition py-2">Inicio</a>
+              <a href="/products" className="text-gray-700 hover:text-pink-500 transition py-2">Productos</a>
             </div>
           </div>
         )}
