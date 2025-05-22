@@ -48,12 +48,10 @@ const Products = () => {
     <div className="flex flex-col min-h-screen bg-pink-50">
       <div className="flex-grow py-10">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-serif text-pink-800 text-center mb-10">Nuestra Colección de Lujo</h1>
+          <h1 className="text-4xl font-serif text-pink-400 text-center mb-10">Nuestra Colección</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {products.map((product) => (
-              <Link to={`/product/${product.idProducto}`} key={product.idProducto}>
-                <ProductCard product={product} />
-              </Link>
+              <ProductCard key={product.idProducto} product={product} />
             ))}
           </div>
           {/* Paginación */}

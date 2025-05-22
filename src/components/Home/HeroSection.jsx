@@ -116,7 +116,7 @@ const HeroSection = ({ isVisible }) => {
               </div>
             )}
             <div className="absolute -bottom-4 sm:-bottom-6 -left-4 sm:-left-6 bg-white p-3 sm:p-4 rounded shadow-md">
-              <p className="text-base sm:text-lg font-bold text-pink-500">Lo Nuevo</p>
+              <p className="text-base sm:text-lg font-bold text-pink-500">#Lo Nuevo</p>
             </div>
           </div>
           {/* Text Section */}

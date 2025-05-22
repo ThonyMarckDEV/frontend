@@ -115,33 +115,25 @@ const Categories = ({ isVisible }) => {
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}
       >
-        <div className="container mx-auto px-4 py-8 sm:py-12 md:py-16 relative">
+        <div className="container mx-auto px-4 py-8 sm:py-12 md:py-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-800">
             Nuestras Categorías
           </h2>
           {error ? (
             <p className="text-center text-red-500 text-lg">{error}</p>
           ) : categories.length === 0 ? (
-            <div
-              className={`flex flex-wrap justify-center gap-6 sm:gap-8 ${
-                skeletonCount === 1 ? 'max-w-xs mx-auto' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-              }`}
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 justify-items-center w-full">
               {[...Array(skeletonCount)].map((_, index) => (
                 <div
-                  key={index}
-                  className="w-full h-64 sm:h-80 bg-gray-200 animate-pulse rounded-lg max-w-xs"
+                  key={`skeleton-${index}`}
+                  className="w-full max-w-xs h-64 sm:h-80 bg-gray-200 animate-pulse rounded-lg"
                 />
               ))}
             </div>
           ) : (
-            <div
-              className={`flex flex-wrap justify-center gap-6 sm:gap-8 ${
-                currentCategories.length === 1 ? 'max-w-xs mx-auto' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-              }`}
-            >
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 justify-items-center w-full">
               {currentCategories.map((category) => (
-                <div key={category.id} className="relative max-w-xs">
+                <div key={category.id} className="w-full max-w-xs">
                   <div
                     className="group relative overflow-hidden rounded-lg shadow-md transition-transform transform hover:scale-105 cursor-pointer"
                     onClick={() => handleCategoryClick(category.id)}

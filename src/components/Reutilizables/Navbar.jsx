@@ -30,7 +30,7 @@ const Navbar = () => {
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <h1 className="text-2xl font-bold text-pink-500">MelyMarckStore</h1>
+            <h1 className="text-2xl font-bold text-pink-300">MelyMarckStore</h1>
           </div>
           
           <div className="hidden md:flex space-x-8">
