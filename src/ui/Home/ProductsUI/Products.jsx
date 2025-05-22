@@ -3,6 +3,7 @@ import axios from 'axios';
 import ProductCard from '../../../components/Home/ProductsUIComponents/ProductCard';
 import API_BASE_URL from '../../../js/urlHelper';
 import Footer from '../../../components/Home/Footer';
+import FetchWithGif from '../../../components/Reutilizables/FetchWithGif';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import noProductsImage from '../../../img/utilidades/noproduct.png';
 
@@ -56,14 +57,12 @@ const Products = () => {
     setFilters(newFilters);
     setProducts([]); // Clear products to prevent stale data
     setLoading(true); // Ensure loading state
-    // Fetch subcategories if categoryId is present
     if (newFilters.categoryId) {
       fetchSubcategories(newFilters.categoryId);
     } else {
       setSubcategories([]);
       setSubcategoriesLoading(false);
     }
-    // Fetch products based on URL parameters
     fetchProducts(1, newFilters);
   }, [categoryId, subcategoryId, location.search]);
 
@@ -95,9 +94,9 @@ const Products = () => {
       if (minPrice) query.set('min_price', minPrice);
       if (maxPrice) query.set('max_price', maxPrice);
       const url = `${API_BASE_URL}/api/products?page=${page}${categoryId ? `&category_id=${categoryId}` : ''}${subcategoryId ? `&subcategory_id=${subcategoryId}` : ''}&${query.toString()}`;
-      console.log('Fetching products with URL:', url); // Debug log
+      console.log('Fetching products with URL:', url);
       const response = await axios.get(url);
-      console.log('API response:', response.data); // Debug log
+      console.log('API response:', response.data);
       if (response.data.success) {
         setProducts(response.data.data.data);
         setCurrentPage(response.data.data.current_page);
@@ -117,7 +116,7 @@ const Products = () => {
 
   // Fetch products when page changes
   useEffect(() => {
-    if (!loading) { // Only fetch if not already loading
+    if (!loading) {
       fetchProducts(currentPage);
     }
   }, [currentPage]);
@@ -128,7 +127,7 @@ const Products = () => {
     setFilters((prev) => {
       const newFilters = { ...prev, [name]: value };
       if (name === 'categoryId') {
-        newFilters.subcategoryId = ''; // Reset subcategory when category changes
+        newFilters.subcategoryId = '';
         if (value) {
           fetchSubcategories(value);
         } else {
@@ -156,10 +155,10 @@ const Products = () => {
       }
     }
     navigate(`${path}?${query.toString()}`, { state: { subcategoryName }, replace: false });
-    setCurrentPage(1); // Reset to first page
-    setIsFilterOpen(false); // Close sidebar
-    setProducts([]); // Clear products before fetching
-    fetchProducts(1, filters); // Fetch products with applied filters
+    setCurrentPage(1);
+    setIsFilterOpen(false);
+    setProducts([]);
+    fetchProducts(1, filters);
   };
 
   // Clear filters
@@ -177,8 +176,8 @@ const Products = () => {
     navigate('/products', { replace: false });
     setCurrentPage(1);
     setIsFilterOpen(false);
-    setProducts([]); // Clear products before fetching
-    fetchProducts(1, newFilters); // Fetch all products
+    setProducts([]);
+    fetchProducts(1, newFilters);
   };
 
   // Toggle filter sidebar
@@ -193,17 +192,17 @@ const Products = () => {
     }
   };
 
-  if (loading) return <div className="text-center text-pink-600">Cargando...</div>;
+  if (loading) return <FetchWithGif />; // Replace the loading text with FetchWithGif
   if (error) return <div className="text-center text-red-600">{error}</div>;
 
   return (
     <div className="flex flex-col min-h-screen bg-pink-50">
       <div className="flex-grow py-10 relative">
         <div className="container mx-auto px-4">
-          {/* Hamburger Button */}
           <button
             onClick={toggleFilterSidebar}
-            className="fixed top-4 left-4 z-50 p-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 transition sm:top-6 sm:left-6"
+            className="fixed top-[80px] right-4 z-50 p-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 transition-colors"
+            aria-label="Toggle filter sidebar"
           >
             <svg
               className="w-6 h-6"
@@ -216,7 +215,7 @@ const Products = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="2"
-                d="M4 6h16M4 12h16m-7 6h7"
+                d="M4 6h16M4 12h16M4 18h7"
               />
             </svg>
           </button>
@@ -239,7 +238,6 @@ const Products = () => {
             </div>
           )}
 
-          {/* Pagination */}
           {products.length > 0 && (
             <div className="flex justify-center mt-8 space-x-2">
               <button
@@ -273,7 +271,6 @@ const Products = () => {
           )}
         </div>
 
-        {/* Filter Sidebar */}
         {isFilterOpen && (
           <>
             <div className="fixed inset-0 bg-black/50 z-40" onClick={toggleFilterSidebar}></div>
@@ -289,7 +286,6 @@ const Products = () => {
                   </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                  {/* Category Filter */}
                   <div>
                     <label className="text-sm font-semibold text-pink-800">Categoría</label>
                     <select
@@ -307,7 +303,6 @@ const Products = () => {
                     </select>
                   </div>
 
-                  {/* Subcategory Filter */}
                   <div>
                     <label className="text-sm font-semibold text-pink-800">Subcategoría</label>
                     <select
@@ -332,7 +327,6 @@ const Products = () => {
                     </select>
                   </div>
 
-                  {/* Name Filter */}
                   <div>
                     <label className="text-sm font-semibold text-pink-800">Nombre</label>
                     <input
@@ -345,7 +339,6 @@ const Products = () => {
                     />
                   </div>
 
-                  {/* Price Range Filter */}
                   <div>
                     <label className="text-sm font-semibold text-pink-800">Rango de Precio</label>
                     <div className="flex space-x-2 mt-2">
@@ -370,7 +363,6 @@ const Products = () => {
                     </div>
                   </div>
 
-                  {/* Apply and Clear Buttons */}
                   <div className="flex space-x-2">
                     <button
                       onClick={applyFilters}

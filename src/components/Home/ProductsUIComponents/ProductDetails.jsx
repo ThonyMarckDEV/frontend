@@ -87,7 +87,7 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
 
           <div>
             <p className="text-gray-600 mb-4">{product.descripcion}</p>
-            <p className="text-lg font-bold text-gold-600 mb-4">${totalPrice}</p>
+            <p className="text-lg font-bold text-gold-600 mb-4">S./ {totalPrice}</p>
 
             <div className="mb-4">
               <h3 className="text-sm font-semibold text-pink-800">Selecciona Modelo:</h3>
@@ -156,7 +156,7 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
             </div>
 
             <button className="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700 transition">
-              Add to Cart
+              Agregar al carrito
             </button>
           </div>
         </div>

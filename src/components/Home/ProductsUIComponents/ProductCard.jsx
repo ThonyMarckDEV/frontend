@@ -57,7 +57,7 @@ const ProductCard = ({ product }) => {
         <div className="p-6">
           <h2 className="text-2xl font-serif text-pink-800 mb-2">{product.nombreProducto}</h2>
           <p className="text-gray-600 mb-4">{product.descripcion}</p>
-          <p className="text-lg font-bold text-gold-600 mb-4">${product.precio.toFixed(2)}</p>
+          <p className="text-lg font-bold text-gold-600 mb-4">S./ {product.precio.toFixed(2)}</p>
           <div className="mb-4">
             <h3 className="text-sm font-semibold text-pink-800">Select Model:</h3>
             <div className="flex space-x-2 mt-2">

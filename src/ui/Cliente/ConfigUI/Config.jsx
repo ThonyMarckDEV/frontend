@@ -13,7 +13,7 @@ const Config = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-pink-500 py-6 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-white to-pink-300 py-6 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center">

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import API_BASE_URL from '../../js/urlHelper';
 import jwtUtils from '../../utilities/jwtUtils';
-import LoadingScreen from '../../components/LoadingScreen';
+import FetchWithGif from '../../components/Reutilizables/FetchWithGif';
 import LoginForm from '../../components/Auth/Login/LoginForm';
 import ErrorsUtility from '../../utilities/ErrorsUtility';
 import { toast, ToastContainer } from 'react-toastify';
@@ -94,8 +94,8 @@ const Login = () => {
 
   return (
     <GoogleOAuthProvider clientId="265411714077-c9kj1m9s7798f0vuc0emub55t7h6c2un.apps.googleusercontent.com">
-      <div className="min-h-screen w-full overflow-auto bg-gradient-to-b from-white to-pink-500 flex items-center justify-center relative py-6">
-        {loading && <LoadingScreen />}
+      <div className="min-h-screen w-full overflow-auto bg-gradient-to-b from-white to-pink-300 flex items-center justify-center relative py-6">
+        {loading && <FetchWithGif />}
         <LoginForm 
           username={username}
           setUsername={setUsername}
