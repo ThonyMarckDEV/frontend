@@ -20,7 +20,7 @@ const Categories = ({ isVisible }) => {
       try {
         const response = await axios.get(`${API_BASE_URL}/api/categories`);
         const result = response.data;
-        console.log('Categories API response:', result);
+       // console.log('Categories API response:', result);
         if (result.success) {
           setCategories(
             result.data.map((cat) => ({
