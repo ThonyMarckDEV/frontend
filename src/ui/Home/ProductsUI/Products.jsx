@@ -4,6 +4,7 @@ import ProductCard from '../../../components/Home/ProductsUIComponents/ProductCa
 import API_BASE_URL from '../../../js/urlHelper';
 import Footer from '../../../components/Home/Footer';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import noProductsImage from '../../../img/utilidades/noproduct.png';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -228,7 +229,14 @@ const Products = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center text-pink-600">No se encontraron productos</div>
+            <div className="flex flex-col items-center justify-center text-center text-pink-600">
+              <img
+                src={noProductsImage}
+                alt="No products found"
+                className="w-64 max-w-xs mb-4"
+              />
+              <p>No se encontraron productos con los filtros seleccionados, prueba con otra cosa o algo así.</p>
+            </div>
           )}
 
           {/* Pagination */}
