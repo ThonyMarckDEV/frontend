@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
-import { Menu, X, Search, Heart, ShoppingBag, User } from 'lucide-react';
+// src/components/Reutilizables/Navbar.jsx
+import React, { useContext, useState } from 'react';
+import { Menu, X, Heart, ShoppingBag, User } from 'lucide-react';
 import jwtUtils from '../../utilities/jwtUtils';
 import { logout } from '../../js/logout';
+import { CartContext } from '../../context/CartContext'; // Ensure correct path
 
 const Navbar = () => {
+  const { cartItemCount } = useContext(CartContext); // Access cartItemCount
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const token = jwtUtils.getRefreshTokenFromCookie();
   const rol = token ? jwtUtils.getUserRole(token) : null;
-  
+
   const handleLogout = () => {
     logout();
   };
@@ -24,29 +27,36 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <button 
+            <button
               className="md:hidden mr-4"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <h1 className="text-2xl font-bold text-pink-300">MelyMarckStore</h1>
+             <a href="/" > <h1 className="text-2xl font-bold text-pink-300">MelyMarckStore</h1></a>
           </div>
-          
+
           <div className="hidden md:flex space-x-8">
             <a href="/" className="text-gray-700 hover:text-pink-500 transition">Inicio</a>
             <a href="/products" className="text-gray-700 hover:text-pink-500 transition">Productos</a>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <button className="text-gray-700 hover:text-pink-500">
               <Heart size={20} />
             </button>
-            <button className="text-gray-700 hover:text-pink-500">
-              <ShoppingBag size={20} />
-            </button>
             <div className="relative">
-              <button 
+              <a href="/cart" className="text-gray-700 hover:text-pink-500">
+                <ShoppingBag size={20} />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                )}
+              </a>
+            </div>
+            <div className="relative">
+              <button
                 className="text-gray-700 hover:text-pink-500"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               >
@@ -63,7 +73,7 @@ const Navbar = () => {
                         onClick={handleLogout}
                         className="flex items-center gap-2 bg-white hover:bg-gray-100 text-red-500 px-4 py-2 rounded w-full"
                       >
-                       Cerrar sesión
+                        Cerrar sesión
                       </button>
                     </>
                   ) : (
@@ -77,7 +87,7 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-        
+
         {isMenuOpen && (
           <div className="md:hidden pt-4 pb-2 border-t mt-4">
             <div className="flex flex-col space-y-3">

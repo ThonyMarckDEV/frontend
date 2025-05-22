@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// src/components/Home/ProductsUIComponents/ProductDetails.jsx
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
@@ -6,14 +7,24 @@ import API_BASE_URL from '../../../js/urlHelper';
 import jwtUtils from '../../../utilities/jwtUtils';
 import { fetchWithAuth } from '../../../js/authToken';
 import { toast } from 'react-toastify';
+import LoadingScreen from '../../../components/LoadingScreen';
+import { CartContext } from '../../../context/CartContext'; // Import CartContext
 
 const ProductDetails = ({ product, isOpen, onClose }) => {
+  const { updateCartCount } = useContext(CartContext); // Access updateCartCount from context
   const [selectedModel, setSelectedModel] = useState(product.selectedModel || {});
   const [quantity, setQuantity] = useState(1);
   const [showFullCharacteristics, setShowFullCharacteristics] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isOpen) {
+      setQuantity(1);
+    }
+  }, [isOpen]);
 
   const handleModelChange = (model) => {
     setSelectedModel(model);
@@ -21,7 +32,8 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
   };
 
   const handleQuantityIncrement = () => {
-    if (quantity < (selectedModel.stock?.cantidad || 0)) {
+    const stockCantidad = selectedModel.stock?.cantidad || 0;
+    if (quantity < stockCantidad) {
       setQuantity(quantity + 1);
     }
   };
@@ -41,19 +53,15 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
   };
 
   const handleAddToCart = async () => {
-    // Verificar si existe refresh_token
     const refreshToken = jwtUtils.getRefreshTokenFromCookie();
-    console.log('refresh_token:', refreshToken);
     if (!refreshToken) {
       setErrorMessage('Por favor, inicia sesión para agregar productos al carrito.');
       setShowLoginModal(true);
       return;
     }
 
-    // Obtener idUsuario e idCarrito del refresh_token
     const idUsuario = jwtUtils.getUserID(refreshToken);
     const idCarrito = jwtUtils.getIdCarrito(refreshToken);
-    console.log('idUsuario:', idUsuario, 'idCarrito:', idCarrito);
 
     if (!idUsuario) {
       setErrorMessage('Error: No se pudo obtener la información del usuario desde el refresh token.');
@@ -66,26 +74,23 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
       return;
     }
 
-    // Validar idProducto
     if (!product.idProducto) {
       toast.error('Error: No se encontró el producto.');
       return;
     }
 
-    // Validar selectedModel.idModelo
     if (!selectedModel.idModelo) {
       toast.error('Error: No se seleccionó un modelo válido.');
       return;
     }
 
-    // Validar cantidad
     if (!quantity || quantity < 1) {
       toast.error('Error: La cantidad debe ser mayor a 0.');
       return;
     }
 
-    // Verificar stock
-    if (selectedModel.stock?.cantidad <= 0) {
+    const stockCantidad = selectedModel.stock?.cantidad || 0;
+    if (stockCantidad <= 0) {
       toast.error('Error: No hay stock disponible para este modelo.');
       return;
     }
@@ -96,10 +101,9 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
       idModelo: selectedModel.idModelo,
       cantidad: quantity,
     };
-    console.log('Request body:', requestBody);
 
     try {
-      // Agregar el producto al carrito
+      setIsLoading(true);
       const response = await fetchWithAuth(`${API_BASE_URL}/api/carrito/detalles`, {
         method: 'POST',
         headers: {
@@ -108,20 +112,20 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
         body: JSON.stringify(requestBody),
       });
 
-      // Parsear la respuesta
       const data = await response.json();
-      console.log('Response data:', data);
-
       if (!response.ok) {
         throw new Error(data.message || `Error ${response.status}`);
       }
 
-      // Mostrar mensaje de éxito
       toast.success('Producto agregado al carrito exitosamente');
+      setQuantity(1);
+      await updateCartCount(); // Update cart count
       onClose();
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
       toast.error(`Error al agregar el producto al carrito: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -132,23 +136,22 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  // Calcular precio total
   const totalPrice = (product.precio * quantity).toFixed(2);
 
   return (
     <>
-      {/* Modal principal de detalles del producto */}
+      {isLoading && <LoadingScreen />}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 sm:items-center sm:justify-center"
         onClick={onClose}
       >
         <div
-          className={`bg-white rounded-lg w-full mx-4 max-h-[90vh] sm:max-w-2xl sm:mx-auto ${
-            showFullCharacteristics ? 'h-full sm:h-auto' : 'h-auto'
-          } overflow-y-auto sm:overflow-y-auto relative`}
+          className={`bg-white rounded-lg w-full mx-tape://github.com/4xAI/sentry
+            max-h-[90vh] sm:max-w-2xl sm:mx-auto ${
+              showFullCharacteristics ? 'h-full sm:h-auto' : 'h-auto'
+            } overflow-y-auto sm:overflow-y-auto relative`}
           onClick={handleModalBodyClick}
         >
-          {/* Fixed Header */}
           <div className="fixed top-0 left-0 right-0 bg-white border-b z-10 sm:static sm:border-b sm:z-auto">
             <div className="flex justify-between items-center p-6">
               <h2 className="text-2xl font-serif text-pink-800">{product.nombreProducto}</h2>
@@ -217,7 +220,7 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={handleQuantityDecrement}
-                    disabled={quantity <= 1}
+                    disabled={quantity <= 1 || isLoading}
                     className="w-10 h-10 flex items-center justify-center bg-pink-200 text-pink-800 rounded-full hover:bg-pink-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
                   >
                     −
@@ -227,7 +230,7 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
                   </span>
                   <button
                     onClick={handleQuantityIncrement}
-                    disabled={quantity >= (selectedModel.stock?.cantidad || 0)}
+                    disabled={quantity >= (selectedModel.stock?.cantidad || 0) || isLoading}
                     className="w-10 h-10 flex items-center justify-center bg-pink-200 text-pink-800 rounded-full hover:bg-pink-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
                   >
                     +
@@ -256,21 +259,20 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
 
               <button
                 onClick={handleAddToCart}
-                disabled={selectedModel.stock?.cantidad <= 0}
+                disabled={selectedModel.stock?.cantidad <= 0 || isLoading}
                 className={`w-full py-2 rounded text-white transition ${
-                  selectedModel.stock?.cantidad <= 0
+                  selectedModel.stock?.cantidad <= 0 || isLoading
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-pink-600 hover:bg-pink-700'
                 }`}
               >
-                Agregar al carrito
+                {isLoading ? 'Agregando...' : 'Agregar al carrito'}
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal de login */}
       {showLoginModal && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] sm:items-center sm:justify-center"

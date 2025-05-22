@@ -4,7 +4,7 @@ import './index.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 //Contextos
-
+import { CartProvider } from './context/CartContext';
 
 //Componentes Globales
 import { ToastContainer } from 'react-toastify';
@@ -53,11 +53,13 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <AppContent />
-        <ToastContainer position="top-right" autoClose={3000} />
-      </div>
+      <CartProvider>
+        <div className="min-h-screen bg-white">
+          <Navbar />
+          <AppContent />
+          <ToastContainer position="top-right" autoClose={3000} />
+        </div>
+      </CartProvider>
     </Router>
   );
 }
