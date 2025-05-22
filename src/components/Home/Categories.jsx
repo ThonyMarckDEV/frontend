@@ -52,7 +52,7 @@ const Categories = ({ isVisible }) => {
         `${API_BASE_URL}/api/subcategories?category_id=${categoryId}`
       );
       const result = response.data;
-      console.log(`Subcategories API response for category ${categoryId}:`, result);
+      //console.log(`Subcategories API response for category ${categoryId}:`, result);
       if (result.success) {
         setSubcategories((prev) => ({
           ...prev,

@@ -94,9 +94,9 @@ const Products = () => {
       if (minPrice) query.set('min_price', minPrice);
       if (maxPrice) query.set('max_price', maxPrice);
       const url = `${API_BASE_URL}/api/products?page=${page}${categoryId ? `&category_id=${categoryId}` : ''}${subcategoryId ? `&subcategory_id=${subcategoryId}` : ''}&${query.toString()}`;
-      console.log('Fetching products with URL:', url);
+     // console.log('Fetching products with URL:', url);
       const response = await axios.get(url);
-      console.log('API response:', response.data);
+      //console.log('API response:', response.data);
       if (response.data.success) {
         setProducts(response.data.data.data);
         setCurrentPage(response.data.data.current_page);
