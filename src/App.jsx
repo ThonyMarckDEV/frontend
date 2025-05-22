@@ -38,6 +38,7 @@ function AppContent() {
       <Route path="/" element={<ProtectedRouteHome element={<HomeUI />} />} />
       <Route path="/login"  element={<ProtectedRouteHome element={<LoginUI />}  />} />
       <Route path="/products" element={<ProductsUI />} />
+      <Route path="/products/:categoryId?/:subcategoryId?" element={<ProductsUI />} />
 
       {/* Rutas Cliente */}
       <Route path="/settings" element={<ProtectedRouteCliente element={<ConfigUI />} />}  />
