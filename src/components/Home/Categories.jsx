@@ -10,6 +10,8 @@ const Categories = ({ isVisible }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loadingSubcategories, setLoadingSubcategories] = useState(false);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const categoriesPerPage = 4;
   const navigate = useNavigate();
 
   // Fetch categories on mount
@@ -24,7 +26,7 @@ const Categories = ({ isVisible }) => {
             result.data.map((cat) => ({
               id: cat.idCategoria,
               name: cat.nombreCategoria,
-              image: cat.imagen || 'https://via.placeholder.com/300x400',
+              image: cat.imagen || 'https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled.png',
             }))
           );
         } else {
@@ -41,7 +43,7 @@ const Categories = ({ isVisible }) => {
   // Fetch subcategories when a category is clicked
   const handleCategoryClick = async (categoryId) => {
     if (selectedCategory === categoryId) {
-      setSelectedCategory(null); // Toggle off if clicked again
+      setSelectedCategory(null);
       return;
     }
     setLoadingSubcategories(true);
@@ -70,7 +72,7 @@ const Categories = ({ isVisible }) => {
 
   // Navigate to subcategory page
   const handleSubcategoryClick = (categoryId, subcategoryId, subcategoryName) => {
-    navigate(`/subcategory/${categoryId}/${subcategoryId}`, {
+    navigate(`/products/${categoryId}/${subcategoryId}`, {
       state: { subcategoryName },
     });
   };
@@ -80,8 +82,30 @@ const Categories = ({ isVisible }) => {
     setSelectedCategory(null);
   };
 
-  // Determine the number of skeleton loaders (default to 4, or match categories length if known)
-  const skeletonCount = categories.length > 0 ? categories.length : 4;
+  // Pagination logic
+  const totalPages = Math.ceil(categories.length / categoriesPerPage);
+  const indexOfLastCategory = currentPage * categoriesPerPage;
+  const indexOfFirstCategory = indexOfLastCategory - categoriesPerPage;
+  const currentCategories = categories.slice(indexOfFirstCategory, indexOfLastCategory);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Determine the number of skeleton loaders
+  const skeletonCount = categories.length > 0 ? Math.min(categories.length, categoriesPerPage) : 4;
 
   return (
     <>
@@ -113,10 +137,10 @@ const Categories = ({ isVisible }) => {
           ) : (
             <div
               className={`flex flex-wrap justify-center gap-6 sm:gap-8 ${
-                categories.length === 1 ? 'max-w-xs mx-auto' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                currentCategories.length === 1 ? 'max-w-xs mx-auto' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
               }`}
             >
-              {categories.map((category) => (
+              {currentCategories.map((category) => (
                 <div key={category.id} className="relative max-w-xs">
                   <div
                     className="group relative overflow-hidden rounded-lg shadow-md transition-transform transform hover:scale-105 cursor-pointer"
@@ -142,6 +166,43 @@ const Categories = ({ isVisible }) => {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {categories.length > categoriesPerPage && (
+            <div className="flex justify-center mt-8 space-x-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 text-gray-800 hover:text-pink-300 transition rounded-lg ${
+                  currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                ← Anterior
+              </button>
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => handlePageChange(index + 1)}
+                  className={`px-4 py-2 rounded-lg ${
+                    currentPage === index + 1
+                      ? 'bg-pink-300 text-white'
+                      : 'text-gray-800 hover:text-pink-300 transition'
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 text-gray-800 hover:text-pink-300 transition rounded-lg ${
+                  currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                Siguiente →
+              </button>
             </div>
           )}
 

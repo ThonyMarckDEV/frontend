@@ -11,18 +11,19 @@ import { ToastContainer } from 'react-toastify';
 import Navbar from './components/Reutilizables/Navbar';
 
 // Componentes Home
-import Home from './ui/Home';
+import HomeUI from './ui/Home';
 
 // UIS AUTH
 import ErrorPage from './components/ErrorPage';
 import ErrorPage401 from './components/ErrorPage401';
-import Login from './ui/Auth/Login';
+import LoginUI from './ui/Auth/Login';
 
 // UIS ADMIN
 
 
 // UIS Cliente
-import Config from './ui/Cliente/ConfigUI/Config';
+import ProductsUI from './ui/Home/ProductsUI/Products';
+import ConfigUI from './ui/Cliente/ConfigUI/Config';
 
 // Utilities
 import ProtectedRouteHome from './utilities/ProtectedRouteHome';
@@ -34,13 +35,12 @@ function AppContent() {
   return (
     <Routes>
       {/* Rutas públicas */}
-      <Route path="/" element={<ProtectedRouteHome element={<Home />} />} />
-
-      <Route path="/login"  element={<ProtectedRouteHome element={<Login />}  />} />
+      <Route path="/" element={<ProtectedRouteHome element={<HomeUI />} />} />
+      <Route path="/login"  element={<ProtectedRouteHome element={<LoginUI />}  />} />
+      <Route path="/products" element={<ProductsUI />} />
 
       {/* Rutas Cliente */}
-
-      <Route path="/settings" element={<ProtectedRouteCliente element={<Config />} />}  />
+      <Route path="/settings" element={<ProtectedRouteCliente element={<ConfigUI />} />}  />
 
       {/* Ruta de error */}
       <Route path="/*" element={<ErrorPage />} />

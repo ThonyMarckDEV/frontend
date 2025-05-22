@@ -5,12 +5,14 @@ import API_BASE_URL from '../../../../js/urlHelper';
 import jwtUtils from '../../../../utilities/jwtUtils';
 import { useNavigate } from 'react-router-dom';
 import { fetchWithAuth } from '../../../../js/authToken';
+import LoadingScreen from '../../../LoadingScreen';
 
 const ActiveSessions = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(null);
   const navigate = useNavigate();
+  const [loadingScreen, setLoadingScreen] = useState(false);
 
   useEffect(() => {
     fetchSessions();
@@ -40,6 +42,7 @@ const ActiveSessions = () => {
 
   const deleteSession = async (idRefreshToken) => {
     setDeleting(idRefreshToken);
+      setLoadingScreen(true);
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/sessions`, {
         method: 'DELETE',
@@ -67,11 +70,13 @@ const ActiveSessions = () => {
       console.error('Error deleting session:', error);
     } finally {
       setDeleting(null);
+      setLoadingScreen(false);
     }
   };
 
   return (
     <div>
+      {loadingScreen && <LoadingScreen />}
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Sesiones Activas</h2>
       {loading ? (
         <div className="flex justify-center">

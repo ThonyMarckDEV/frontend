@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Navbar from '../components/Reutilizables/Navbar';
 import HeroSection from '../components/Home/HeroSection';
 import Categories from '../components/Home/Categories';
 import FeaturedProducts from '../components/Home/FeaturedProducts';
@@ -11,16 +10,16 @@ const Landing = () => {
     categories: false,
     products: false,
     testimonials: false,
-    newsletter: false
+    newsletter: false,
   });
 
   useEffect(() => {
     // Trigger animations sequentially
-    setTimeout(() => setIsVisible(prev => ({ ...prev, hero: true })), 300);
-    setTimeout(() => setIsVisible(prev => ({ ...prev, categories: true })), 800);
-    setTimeout(() => setIsVisible(prev => ({ ...prev, products: true })), 1300);
-    setTimeout(() => setIsVisible(prev => ({ ...prev, testimonials: true })), 1800);
-    setTimeout(() => setIsVisible(prev => ({ ...prev, newsletter: true })), 2300);
+    setTimeout(() => setIsVisible((prev) => ({ ...prev, hero: true })), 300);
+    setTimeout(() => setIsVisible((prev) => ({ ...prev, categories: true })), 800);
+    setTimeout(() => setIsVisible((prev) => ({ ...prev, products: true })), 1300);
+    setTimeout(() => setIsVisible((prev) => ({ ...prev, testimonials: true })), 1800);
+    setTimeout(() => setIsVisible((prev) => ({ ...prev, newsletter: true })), 2300);
   }, []);
 
   return (

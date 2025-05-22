@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X, Search, Heart, ShoppingBag, User } from 'lucide-react';
 import jwtUtils from '../../utilities/jwtUtils';
+import { logout } from '../../js/logout';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -8,6 +9,10 @@ const Navbar = () => {
 
   const token = jwtUtils.getRefreshTokenFromCookie();
   const rol = token ? jwtUtils.getUserRole(token) : null;
+  
+  const handleLogout = () => {
+    logout();
+  };
 
   // If user is admin, hide the navbar
   if (rol === 'admin') {
@@ -54,7 +59,12 @@ const Navbar = () => {
                       <a href="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Perfil</a>
                       <a href="/orders" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Pedidos</a>
                       <a href="/settings" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Configuración</a>
-                      <a href="/logout" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Cerrar Sesión</a>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 bg-white hover:bg-gray-100 text-red-500 px-4 py-2 rounded w-full"
+                      >
+                       Cerrar sesión
+                      </button>
                     </>
                   ) : (
                     <>
