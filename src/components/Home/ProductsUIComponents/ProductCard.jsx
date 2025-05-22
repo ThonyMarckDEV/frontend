@@ -1,4 +1,3 @@
-// src/components/ProductCard.jsx
 import React, { useState } from 'react';
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
@@ -20,34 +19,40 @@ const ProductCard = ({ product }) => {
     setIsModalOpen(false);
   };
 
+  const handleCarouselClick = (e) => {
+    e.stopPropagation(); 
+  };
+
   return (
     <>
       <div
         className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition duration-300 cursor-pointer"
         onClick={openModal}
       >
-        <Carousel
-          showThumbs={false}
-          showStatus={false}
-          infiniteLoop
-          useKeyboardArrows
-          autoPlay
-          interval={5000}
-          showIndicators={true}
-          dynamicHeight={false}
-          className="relative"
-        >
-          {selectedModel.imagenes.map((image) => (
-            <div key={image.idImagen} className="h-64">
-              <img
-                src={image.urlImagen}
-                alt={product.nombreProducto}
-                className="w-full h-full object-cover"
-                onError={(e) => (e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found')}
-              />
-            </div>
-          ))}
-        </Carousel>
+        <div onClick={handleCarouselClick}>
+          <Carousel
+            showThumbs={false}
+            showStatus={false}
+            infiniteLoop
+            useKeyboardArrows
+            autoPlay
+            interval={5000}
+            showIndicators={true}
+            dynamicHeight={false}
+            className="relative"
+          >
+            {selectedModel.imagenes.map((image) => (
+              <div key={image.idImagen} className="h-64">
+                <img
+                  src={image.urlImagen}
+                  alt={product.nombreProducto}
+                  className="w-full h-full object-cover"
+                  onError={(e) => (e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found')}
+                />
+              </div>
+            ))}
+          </Carousel>
+        </div>
 
         <div className="p-6">
           <h2 className="text-2xl font-serif text-pink-800 mb-2">{product.nombreProducto}</h2>
