@@ -1,8 +1,10 @@
+// src/components/Home/Categories.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../../js/urlHelper';
 import LoadingScreen from '../../components/LoadingScreen';
+import NetworkError from '../../components/Reutilizables/NetworkError'; // Import NetworkError
 
 const Categories = ({ isVisible }) => {
   const [categories, setCategories] = useState([]);
@@ -10,6 +12,7 @@ const Categories = ({ isVisible }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loadingSubcategories, setLoadingSubcategories] = useState(false);
   const [error, setError] = useState(null);
+  const [isNetworkError, setIsNetworkError] = useState(false); // New state for network errors
   const [currentPage, setCurrentPage] = useState(1);
   const categoriesPerPage = 4;
   const navigate = useNavigate();
@@ -20,7 +23,6 @@ const Categories = ({ isVisible }) => {
       try {
         const response = await axios.get(`${API_BASE_URL}/api/categories`);
         const result = response.data;
-       // console.log('Categories API response:', result);
         if (result.success) {
           setCategories(
             result.data.map((cat) => ({
@@ -29,12 +31,19 @@ const Categories = ({ isVisible }) => {
               image: cat.imagen || 'https://salonlfc.com/wp-content/uploads/2018/01/image-not-found-scaled.png',
             }))
           );
+          setIsNetworkError(false);
         } else {
           setError(result.message || 'Error fetching categories');
+          setIsNetworkError(false);
         }
       } catch (err) {
         console.error('Fetch categories error:', err);
-        setError('Failed to load categories. Please try again later.');
+        if (err.message.includes('Network Error') || !err.response) {
+          setIsNetworkError(true); // Set network error state
+        } else {
+          setError('Failed to load categories. Please try again later.');
+          setIsNetworkError(false);
+        }
       }
     };
     fetchCategories();
@@ -52,19 +61,25 @@ const Categories = ({ isVisible }) => {
         `${API_BASE_URL}/api/subcategories?category_id=${categoryId}`
       );
       const result = response.data;
-      //console.log(`Subcategories API response for category ${categoryId}:`, result);
       if (result.success) {
         setSubcategories((prev) => ({
           ...prev,
           [categoryId]: result.data,
         }));
         setSelectedCategory(categoryId);
+        setIsNetworkError(false);
       } else {
         setError(result.message || 'Error fetching subcategories');
+        setIsNetworkError(false);
       }
     } catch (err) {
       console.error('Fetch subcategories error:', err);
-      setError('Failed to load subcategories. Please try again later.');
+      if (err.message.includes('Network Error') || !err.response) {
+        setIsNetworkError(true); // Set network error state
+      } else {
+        setError('Failed to load subcategories. Please try again later.');
+        setIsNetworkError(false);
+      }
     } finally {
       setLoadingSubcategories(false);
     }
@@ -119,8 +134,10 @@ const Categories = ({ isVisible }) => {
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-800">
             Nuestras Categorías
           </h2>
-          {error ? (
-            <p className="text-center text-red-500 text-lg">{error}</p>
+          {isNetworkError ? (
+            <NetworkError /> // Use NetworkError component
+          ) : error ? (
+            <p className="text-center text-red-500 text-lg">{error}</p> // Fallback for other errors
           ) : categories.length === 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 justify-items-center w-full">
               {[...Array(skeletonCount)].map((_, index) => (

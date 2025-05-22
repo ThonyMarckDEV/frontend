@@ -1,9 +1,11 @@
+// src/components/Home/ProductsUIComponents/ProductsUI.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProductCard from '../../../components/Home/ProductsUIComponents/ProductCard';
 import API_BASE_URL from '../../../js/urlHelper';
 import Footer from '../../../components/Home/Footer';
 import FetchWithGif from '../../../components/Reutilizables/FetchWithGif';
+import NetworkError from '../../../components/Reutilizables/NetworkError'; // Import NetworkError
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import noProductsImage from '../../../img/utilidades/noproduct.png';
 
@@ -13,6 +15,7 @@ const Products = () => {
   const [lastPage, setLastPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isNetworkError, setIsNetworkError] = useState(false); // New state for network errors
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -36,9 +39,19 @@ const Products = () => {
         const response = await axios.get(`${API_BASE_URL}/api/categories`);
         if (response.data.success) {
           setCategories(response.data.data);
+          setIsNetworkError(false);
+        } else {
+          setError('Error fetching categories');
+          setIsNetworkError(false);
         }
       } catch (err) {
         console.error('Error fetching categories:', err);
+        if (err.message.includes('Network Error') || !err.response) {
+          setIsNetworkError(true);
+        } else {
+          setError('Failed to load categories. Please try again later.');
+          setIsNetworkError(false);
+        }
       }
     };
     fetchCategories();
@@ -73,12 +86,20 @@ const Products = () => {
       const response = await axios.get(`${API_BASE_URL}/api/subcategories?category_id=${categoryId}`);
       if (response.data.success) {
         setSubcategories(response.data.data);
+        setIsNetworkError(false);
       } else {
         setSubcategories([]);
+        setError('Error fetching subcategories');
+        setIsNetworkError(false);
       }
     } catch (err) {
       console.error('Error fetching subcategories:', err);
-      setSubcategories([]);
+      if (err.message.includes('Network Error') || !err.response) {
+        setIsNetworkError(true);
+      } else {
+        setError('Failed to load subcategories. Please try again later.');
+        setIsNetworkError(false);
+      }
     } finally {
       setSubcategoriesLoading(false);
     }
@@ -94,21 +115,26 @@ const Products = () => {
       if (minPrice) query.set('min_price', minPrice);
       if (maxPrice) query.set('max_price', maxPrice);
       const url = `${API_BASE_URL}/api/products?page=${page}${categoryId ? `&category_id=${categoryId}` : ''}${subcategoryId ? `&subcategory_id=${subcategoryId}` : ''}&${query.toString()}`;
-     // console.log('Fetching products with URL:', url);
       const response = await axios.get(url);
-      //console.log('API response:', response.data);
       if (response.data.success) {
         setProducts(response.data.data.data);
         setCurrentPage(response.data.data.current_page);
         setLastPage(response.data.data.last_page);
+        setIsNetworkError(false);
       } else {
         setError('No se pudieron cargar los productos');
         setProducts([]);
+        setIsNetworkError(false);
       }
     } catch (err) {
       console.error('Error fetching products:', err);
-      setError('Error al cargar los productos');
-      setProducts([]);
+      if (err.message.includes('Network Error') || !err.response) {
+        setIsNetworkError(true);
+      } else {
+        setError('Error al cargar los productos');
+        setProducts([]);
+        setIsNetworkError(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -192,8 +218,9 @@ const Products = () => {
     }
   };
 
-  if (loading) return <FetchWithGif />; // Replace the loading text with FetchWithGif
-  if (error) return <div className="text-center text-red-600">{error}</div>;
+  if (loading) return <FetchWithGif />;
+  if (isNetworkError) return <NetworkError />; // Use NetworkError component
+  if (error) return <div className="text-center text-red-600">{error}</div>; // Fallback for other errors
 
   return (
     <div className="flex flex-col min-h-screen bg-pink-50">
