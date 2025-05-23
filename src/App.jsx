@@ -24,6 +24,7 @@ import LoginUI from './ui/Auth/Login';
 // UIS Cliente
 import ProductsUI from './ui/Home/ProductsUI/Products';
 import ConfigUI from './ui/Cliente/ConfigUI/Config';
+import CartUI from './ui/Cliente/Carrito/CartDetail';
 
 // Utilities
 import ProtectedRouteHome from './utilities/ProtectedRouteHome';
@@ -42,6 +43,7 @@ function AppContent() {
 
       {/* Rutas Cliente */}
       <Route path="/settings" element={<ProtectedRouteCliente element={<ConfigUI />} />}  />
+      <Route path="/cart" element={<ProtectedRouteCliente element={<CartUI />} />}  />
 
       {/* Ruta de error */}
       <Route path="/*" element={<ErrorPage />} />

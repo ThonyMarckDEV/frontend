@@ -3,19 +3,15 @@ import React, { useContext, useState } from 'react';
 import { Menu, X, Heart, ShoppingBag, User } from 'lucide-react';
 import jwtUtils from '../../utilities/jwtUtils';
 import { logout } from '../../js/logout';
-import { CartContext } from '../../context/CartContext'; // Ensure correct path
+import { CartContext } from '../../context/CartContext';
 
 const Navbar = () => {
-  const { cartItemCount } = useContext(CartContext); // Access cartItemCount
+  const { cartItemCount } = useContext(CartContext);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const token = jwtUtils.getRefreshTokenFromCookie();
   const rol = token ? jwtUtils.getUserRole(token) : null;
-
-  const handleLogout = () => {
-    logout();
-  };
 
   // If user is admin, hide the navbar
   if (rol === 'admin') {
@@ -33,7 +29,9 @@ const Navbar = () => {
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-             <a href="/" > <h1 className="text-2xl font-bold text-pink-300">MelyMarckStore</h1></a>
+            <a href="/">
+              <h1 className="text-2xl font-bold text-pink-300">MelyMarckStore</h1>
+            </a>
           </div>
 
           <div className="hidden md:flex space-x-8">
@@ -42,19 +40,25 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Always show heart icon */}
             <button className="text-gray-700 hover:text-pink-500">
               <Heart size={20} />
             </button>
-            <div className="relative">
-              <a href="/cart" className="text-gray-700 hover:text-pink-500">
-                <ShoppingBag size={20} />
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                    {cartItemCount}
-                  </span>
-                )}
-              </a>
-            </div>
+            
+            {/* Show shopping bag only if role exists and is cliente */}
+            {rol === 'cliente' && (
+              <div className="relative">
+                <a href="/cart" className="text-gray-700 hover:text-pink-500">
+                  <ShoppingBag size={20} />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </a>
+              </div>
+            )}
+
             <div className="relative">
               <button
                 className="text-gray-700 hover:text-pink-500"
@@ -70,7 +74,7 @@ const Navbar = () => {
                       <a href="/orders" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Pedidos</a>
                       <a href="/settings" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Configuración</a>
                       <button
-                        onClick={handleLogout}
+                        onClick={logout}
                         className="flex items-center gap-2 bg-white hover:bg-gray-100 text-red-500 px-4 py-2 rounded w-full"
                       >
                         Cerrar sesión
@@ -90,7 +94,8 @@ const Navbar = () => {
 
         {isMenuOpen && (
           <div className="md:hidden pt-4 pb-2 border-t mt-4">
-            <div className="flex flex-col space-y-3">
+            <div className="flex flex implode
+            flex-col space-y-3">
               <a href="/" className="text-gray-700 hover:text-pink-500 transition py-2">Inicio</a>
               <a href="/products" className="text-gray-700 hover:text-pink-500 transition py-2">Productos</a>
             </div>
