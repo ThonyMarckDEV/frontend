@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CartContext } from '../../../context/CartContext'; // Import CartContext
+import { CartContext } from '../../../context/CartContext';
 import API_BASE_URL from '../../../js/urlHelper';
 import FetchWithGif from '../../../components/Reutilizables/FetchWithGif';
 import NetworkError from '../../../components/Reutilizables/NetworkError';
@@ -8,17 +8,18 @@ import Footer from '../../../components/Home/Footer';
 import noProductsImage from '../../../img/utilidades/noproduct.png';
 import { fetchWithAuth } from '../../../js/authToken';
 import jwtUtils from '../../../utilities/jwtUtils';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 const CartDetail = () => {
   const [cartDetails, setCartDetails] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isNetworkError, setIsNetworkError] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false); // New state for update loader
+  const [isUpdating, setIsUpdating] = useState(false);
   const navigate = useNavigate();
   const token = jwtUtils.getRefreshTokenFromCookie();
   const idCarrito = jwtUtils.getIdCarrito(token);
-  const { updateCartCount } = useContext(CartContext); // Access context
+  const { updateCartCount } = useContext(CartContext);
 
   useEffect(() => {
     const fetchCartDetails = async () => {
@@ -65,7 +66,7 @@ const CartDetail = () => {
 
   const handleQuantityChange = async (idDetalle, newQuantity) => {
     if (newQuantity < 1) return;
-    setIsUpdating(true); // Show loader
+    setIsUpdating(true);
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/cart/details/${idDetalle}`, {
         method: 'PUT',
@@ -83,7 +84,7 @@ const CartDetail = () => {
               : detail
           )
         );
-        await updateCartCount(); // Update cart count
+        await updateCartCount();
         setError(null);
       } else {
         setError(data?.message || 'Error al actualizar la cantidad');
@@ -94,14 +95,34 @@ const CartDetail = () => {
         setIsNetworkError(true);
       }
     } finally {
-      setIsUpdating(false); // Hide loader
+      setIsUpdating(false);
     }
   };
 
   const handleRemoveItem = async (idDetalle) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este producto del carrito?')) return;
+    const result = await Swal.fire({
+      title: '¿Eliminar producto?',
+      text: '¿Estás seguro de que deseas eliminar este producto del carrito?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#FBB6CE', // pink-300
+      cancelButtonColor: '#6B7280', // gray-500
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      customClass: {
+        popup: 'rounded-xl shadow-lg',
+        title: 'font-serif text-2xl text-pink-300',
+        content: 'text-gray-600',
+        confirmButton: 'font-serif tracking-wide',
+        cancelButton: 'font-serif tracking-wide',
+      },
+      background: '#FFF', // white background
+      buttonsStyling: true,
+    });
 
-    setIsUpdating(true); // Show loader
+    if (!result.isConfirmed) return;
+
+    setIsUpdating(true);
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/cart/details/${idDetalle}`, {
         method: 'DELETE',
@@ -113,7 +134,7 @@ const CartDetail = () => {
         setCartDetails((prevDetails) =>
           prevDetails.filter((detail) => detail.idDetalle !== idDetalle)
         );
-        await updateCartCount(); // Update cart count
+        await updateCartCount();
         setError(null);
       } else {
         setError(data?.message || 'Error al eliminar el producto');
@@ -124,7 +145,7 @@ const CartDetail = () => {
         setIsNetworkError(true);
       }
     } finally {
-      setIsUpdating(false); // Hide loader
+      setIsUpdating(false);
     }
   };
 
@@ -151,7 +172,7 @@ const CartDetail = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-pink-100 to-white text-gray-900">
-      {isUpdating && <UpdateLoader />} {/* Show loader during updates */}
+      {isUpdating && <UpdateLoader />}
       <div className="flex-grow py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-5xl font-serif text-pink-300 text-center mb-12 animate-fade-in tracking-wide">
@@ -181,10 +202,10 @@ const CartDetail = () => {
                         Stock disponible: {detail.modelo?.stock?.cantidad || 0}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Precio unitario: ${(parseFloat(detail.producto?.precio) || 0).toFixed(2)}
+                        Precio unitario: S./ {(parseFloat(detail.producto?.precio) || 0).toFixed(2)}
                       </p>
                       <p className="text-base font-bold text-pink-400">
-                        Subtotal: ${(parseFloat(detail.subtotal) || 0).toFixed(2)}
+                        Subtotal: S./ {(parseFloat(detail.subtotal) || 0).toFixed(2)}
                       </p>
                       <div className="flex items-center mt-4 space-x-2">
                         <button
@@ -220,7 +241,7 @@ const CartDetail = () => {
               </div>
               <div className="text-right mt-8">
                 <p className="text-2xl font-bold text-pink-300 font-serif">
-                  Total: ${calculateTotal()}
+                  Total: S./ {calculateTotal()}
                 </p>
                 <button
                   onClick={() => navigate('/checkout')}
