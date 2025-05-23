@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../../../context/CartContext';
 import API_BASE_URL from '../../../js/urlHelper';
@@ -8,7 +8,8 @@ import Footer from '../../../components/Home/Footer';
 import noProductsImage from '../../../img/utilidades/noproduct.png';
 import { fetchWithAuth } from '../../../js/authToken';
 import jwtUtils from '../../../utilities/jwtUtils';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2';
+import { debounce } from 'lodash';
 
 const CartDetail = () => {
   const [cartDetails, setCartDetails] = useState([]);
@@ -16,88 +17,160 @@ const CartDetail = () => {
   const [error, setError] = useState(null);
   const [isNetworkError, setIsNetworkError] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [pendingUpdates, setPendingUpdates] = useState({}); // Para manejar actualizaciones pendientes
   const navigate = useNavigate();
   const token = jwtUtils.getRefreshTokenFromCookie();
   const idCarrito = jwtUtils.getIdCarrito(token);
   const { updateCartCount } = useContext(CartContext);
 
-  useEffect(() => {
-    const fetchCartDetails = async () => {
-      if (!token || !idCarrito) {
-        setError('No se encontró un carrito válido. Por favor, inicia sesión.');
-        setLoading(false);
-        return;
-      }
+  // Referencias para los timeouts de debounce por producto
+  const updateTimeouts = useRef({});
 
-      try {
-        setLoading(true);
-        const response = await fetchWithAuth(`${API_BASE_URL}/api/cart/${idCarrito}/details`);
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          const formattedData = data.data.map(detail => ({
-            ...detail,
-            subtotal: parseFloat(detail.subtotal),
-            producto: {
-              ...detail.producto,
-              precio: parseFloat(detail.producto.precio),
-            },
-          }));
-          setCartDetails(formattedData);
-          setIsNetworkError(false);
-        } else {
-          setError(data?.message || 'Error al cargar los detalles del carrito');
-          setIsNetworkError(false);
+  // Función para actualizar cantidad localmente (instantánea)
+  const updateLocalQuantity = (idDetalle, newQuantity) => {
+    if (newQuantity < 1 || newQuantity > 10) return;
+    
+    setCartDetails((prevDetails) =>
+      prevDetails.map((detail) => {
+        if (detail.idDetalle === idDetalle) {
+          const updatedDetail = { ...detail, cantidad: newQuantity };
+          // Recalcular subtotal localmente
+          updatedDetail.subtotal = (parseFloat(detail.producto.precio) * newQuantity).toFixed(2);
+          return updatedDetail;
         }
-      } catch (err) {
-        console.error('Error fetching cart details:', err);
-        if (err.message.includes('Network Error') || err.name === 'TypeError') {
-          setIsNetworkError(true);
-        } else {
-          setError('No se pudieron cargar los detalles del carrito');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+        return detail;
+      })
+    );
 
-    fetchCartDetails();
-  }, [idCarrito]);
+    // Marcar como actualización pendiente
+    setPendingUpdates(prev => ({ ...prev, [idDetalle]: newQuantity }));
+  };
 
-  const handleQuantityChange = async (idDetalle, newQuantity) => {
-    if (newQuantity < 1) return;
-    setIsUpdating(true);
+  // Función debounced para actualizar en el servidor
+  const updateServerQuantity = async (idDetalle, quantity) => {
     try {
+      setIsUpdating(true);
       const response = await fetchWithAuth(`${API_BASE_URL}/api/cart/details/${idDetalle}`, {
         method: 'PUT',
-        body: JSON.stringify({ cantidad: newQuantity }),
+        body: JSON.stringify({ cantidad: quantity }),
         headers: { 'Content-Type': 'application/json' },
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // Actualizar con datos del servidor
         setCartDetails((prevDetails) =>
           prevDetails.map((detail) =>
             detail.idDetalle === idDetalle
-              ? { ...detail, ...data.data, subtotal: parseFloat(data.data.subtotal) }
+              ? { 
+                  ...detail, 
+                  cantidad: data.data.cantidad,
+                  subtotal: parseFloat(data.data.subtotal) 
+                }
               : detail
           )
         );
         await updateCartCount();
         setError(null);
+        
+        // Remover de actualizaciones pendientes
+        setPendingUpdates(prev => {
+          const newPending = { ...prev };
+          delete newPending[idDetalle];
+          return newPending;
+        });
       } else {
+        // Si falla, revertir cambio local
         setError(data?.message || 'Error al actualizar la cantidad');
+        fetchCartDetails(); // Recargar datos del servidor
       }
     } catch (err) {
       setError('Error al actualizar la cantidad: ' + err.message);
       if (err.message.includes('Network Error') || err.name === 'TypeError') {
         setIsNetworkError(true);
       }
+      fetchCartDetails(); // Recargar datos del servidor
     } finally {
       setIsUpdating(false);
     }
   };
+
+  // Manejar cambio de cantidad con debounce
+  const handleQuantityChange = (idDetalle, newQuantity) => {
+    if (newQuantity < 1 || newQuantity > 10) return;
+
+    // Actualizar inmediatamente en la UI
+    updateLocalQuantity(idDetalle, newQuantity);
+
+    // Cancelar timeout anterior si existe
+    if (updateTimeouts.current[idDetalle]) {
+      clearTimeout(updateTimeouts.current[idDetalle]);
+    }
+
+    // Crear nuevo timeout para actualizar en servidor
+    updateTimeouts.current[idDetalle] = setTimeout(() => {
+      updateServerQuantity(idDetalle, newQuantity);
+      delete updateTimeouts.current[idDetalle];
+    }, 800); // 800ms de espera
+  };
+
+  // Manejar input directo de cantidad
+  const handleQuantityInputChange = (idDetalle, value) => {
+    const numValue = parseInt(value) || 1;
+    const clampedValue = Math.max(1, Math.min(10, numValue));
+    handleQuantityChange(idDetalle, clampedValue);
+  };
+
+  const fetchCartDetails = async () => {
+    if (!token || !idCarrito) {
+      setError('No se encontró un carrito válido. Por favor, inicia sesión.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/cart/${idCarrito}/details`);
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const formattedData = data.data.map(detail => ({
+          ...detail,
+          subtotal: parseFloat(detail.subtotal),
+          producto: {
+            ...detail.producto,
+            precio: parseFloat(detail.producto.precio),
+          },
+        }));
+        setCartDetails(formattedData);
+        setIsNetworkError(false);
+      } else {
+        setError(data?.message || 'Error al cargar los detalles del carrito');
+        setIsNetworkError(false);
+      }
+    } catch (err) {
+      console.error('Error fetching cart details:', err);
+      if (err.message.includes('Network Error') || err.name === 'TypeError') {
+        setIsNetworkError(true);
+      } else {
+        setError('No se pudieron cargar los detalles del carrito');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCartDetails();
+    
+    // Cleanup function para limpiar timeouts
+    return () => {
+      Object.values(updateTimeouts.current).forEach(timeout => {
+        if (timeout) clearTimeout(timeout);
+      });
+    };
+  }, [idCarrito]);
 
   const handleRemoveItem = async (idDetalle) => {
     const result = await Swal.fire({
@@ -105,8 +178,8 @@ const CartDetail = () => {
       text: '¿Estás seguro de que deseas eliminar este producto del carrito?',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#FBB6CE', // pink-300
-      cancelButtonColor: '#6B7280', // gray-500
+      confirmButtonColor: '#FBB6CE',
+      cancelButtonColor: '#6B7280',
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
       customClass: {
@@ -116,13 +189,12 @@ const CartDetail = () => {
         confirmButton: 'font-serif tracking-wide',
         cancelButton: 'font-serif tracking-wide',
       },
-      background: '#FFF', // white background
+      background: '#FFF',
       buttonsStyling: true,
     });
 
     if (!result.isConfirmed) return;
 
-    setIsUpdating(true);
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/cart/details/${idDetalle}`, {
         method: 'DELETE',
@@ -144,8 +216,6 @@ const CartDetail = () => {
       if (err.message.includes('Network Error') || err.name === 'TypeError') {
         setIsNetworkError(true);
       }
-    } finally {
-      setIsUpdating(false);
     }
   };
 
@@ -155,10 +225,11 @@ const CartDetail = () => {
       .toFixed(2);
   };
 
-  // Custom loader component
+  // Componente de loader mejorado
   const UpdateLoader = () => (
-    <div className="fixed inset-0 flex items-center justify-center bg-pink-100 bg-opacity-75 z-50">
-      <div className="w-12 h-12 border-4 border-pink-300 border-t-transparent rounded-full animate-spin"></div>
+    <div className="fixed bottom-4 right-4 flex items-center bg-pink-300 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+      <span className="text-sm font-medium">Actualizando...</span>
     </div>
   );
 
@@ -206,31 +277,55 @@ const CartDetail = () => {
                       </p>
                       <p className="text-base font-bold text-pink-400">
                         Subtotal: S./ {(parseFloat(detail.subtotal) || 0).toFixed(2)}
+                        {pendingUpdates[detail.idDetalle] && (
+                          <span className="ml-2 text-xs text-orange-500 animate-pulse">
+                            ● Actualizando...
+                          </span>
+                        )}
                       </p>
+                      
+                      {/* Controles de cantidad mejorados */}
                       <div className="flex items-center mt-4 space-x-2">
                         <button
-                          onClick={() =>
-                            handleQuantityChange(detail.idDetalle, detail.cantidad - 1)
-                          }
-                          disabled={detail.cantidad <= 1 || isUpdating}
-                          className="px-3 py-1 bg-pink-300 text-white rounded-l-lg hover:bg-pink-400 disabled:opacity-50 transition-colors duration-200"
+                          onClick={() => handleQuantityChange(detail.idDetalle, detail.cantidad - 1)}
+                          disabled={detail.cantidad <= 1}
+                          className="px-3 py-2 bg-pink-300 text-white rounded-l-lg hover:bg-pink-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-bold"
                         >
                           -
                         </button>
-                        <span className="px-4 py-1 bg-pink-50 text-gray-900 rounded">{detail.cantidad}</span>
+                        
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={detail.cantidad}
+                          onChange={(e) => handleQuantityInputChange(detail.idDetalle, e.target.value)}
+                          className="w-16 px-2 py-2 bg-pink-50 text-gray-900 text-center border border-pink-200 focus:border-pink-400 focus:outline-none"
+                          onBlur={(e) => {
+                            // Validar cuando pierde el foco
+                            const value = parseInt(e.target.value) || 1;
+                            const clampedValue = Math.max(1, Math.min(10, value));
+                            if (value !== clampedValue) {
+                              handleQuantityChange(detail.idDetalle, clampedValue);
+                            }
+                          }}
+                        />
+                        
                         <button
-                          onClick={() =>
-                            handleQuantityChange(detail.idDetalle, detail.cantidad + 1)
-                          }
-                          disabled={detail.cantidad >= (detail.modelo?.stock?.cantidad || 0) || isUpdating}
-                          className="px-3 py-1 bg-pink-300 text-white rounded-r-lg hover:bg-pink-400 disabled:opacity-50 transition-colors duration-200"
+                          onClick={() => handleQuantityChange(detail.idDetalle, detail.cantidad + 1)}
+                          disabled={detail.cantidad >= 10 || detail.cantidad >= (detail.modelo?.stock?.cantidad || 0)}
+                          className="px-3 py-2 bg-pink-300 text-white rounded-r-lg hover:bg-pink-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-bold"
                         >
                           +
                         </button>
+                        
+                        <span className="text-xs text-gray-500 ml-2">
+                          (máx. 10)
+                        </span>
+                        
                         <button
                           onClick={() => handleRemoveItem(detail.idDetalle)}
-                          disabled={isUpdating}
-                          className="ml-4 px-4 py-1 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors duration-200"
+                          className="ml-4 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors duration-200"
                         >
                           Eliminar
                         </button>
@@ -239,16 +334,22 @@ const CartDetail = () => {
                   </div>
                 ))}
               </div>
+              
               <div className="text-right mt-8">
                 <p className="text-2xl font-bold text-pink-300 font-serif">
                   Total: S./ {calculateTotal()}
+                  {Object.keys(pendingUpdates).length > 0 && (
+                    <span className="block text-sm text-orange-500 animate-pulse">
+                      Calculando total actualizado...
+                    </span>
+                  )}
                 </p>
                 <button
                   onClick={() => navigate('/checkout')}
-                  disabled={isUpdating}
-                  className="mt-4 px-8 py-3 bg-pink-300 text-white rounded-lg hover:bg-pink-400 transition-colors duration-200 font-serif tracking-wide disabled:opacity-50"
+                  disabled={Object.keys(pendingUpdates).length > 0}
+                  className="mt-4 px-8 py-3 bg-pink-300 text-white rounded-lg hover:bg-pink-400 transition-colors duration-200 font-serif tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Proceder al Pago
+                  {Object.keys(pendingUpdates).length > 0 ? 'Procesando cambios...' : 'Proceder al Pago'}
                 </button>
               </div>
             </div>
