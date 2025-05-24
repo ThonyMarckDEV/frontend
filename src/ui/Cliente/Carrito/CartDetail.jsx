@@ -5,7 +5,7 @@ import API_BASE_URL from '../../../js/urlHelper';
 import FetchWithGif from '../../../components/Reutilizables/FetchWithGif';
 import NetworkError from '../../../components/Reutilizables/NetworkError';
 import Footer from '../../../components/Home/Footer';
-import noProductsImage from '../../../img/utilidades/noproduct.png';
+import noProductsImage from '../../../img/utilidades/noproduct.webp';
 import { fetchWithAuth } from '../../../js/authToken';
 import jwtUtils from '../../../utilities/jwtUtils';
 import Swal from 'sweetalert2';
