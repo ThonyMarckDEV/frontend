@@ -129,7 +129,7 @@ export const setAccessTokenInCookie = (token) => {
   if (!token) return;
 
   // Configurar opciones de cookies según "Recordarme"
-  const cookieOptions = '; Path=/; Secure; SameSite=Strict'; // 5 minutos
+  const cookieOptions = '; Path=/; Secure; SameSite=Strict';
 
   // Establecer la cookie con el token
   document.cookie = `access_token=${token}${cookieOptions}`;

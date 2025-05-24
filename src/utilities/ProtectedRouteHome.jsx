@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import jwtUtils from '../utilities/jwtUtils'; // Asegúrate de tener esta utilidad para decodificar el token
 
 const ProtectedRoute = ({ element }) => {
-  // Obtener el JWT desde localStorage
+  // Obtener el JWT desde cookies
   const refresh_token = jwtUtils.getRefreshTokenFromCookie();
   
   if (refresh_token) {
