@@ -23,9 +23,6 @@ const ActiveSessions = () => {
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/sessions`, {
         method: 'GET',
-        headers: {
-          'X-Refresh-Token-ID': jwtUtils.getRefreshTokenIDFromCookie() || '',
-        },
       });
       const data = await response.json();
       if (!response.ok) {
@@ -47,8 +44,7 @@ const ActiveSessions = () => {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/sessions`, {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
-          'X-Refresh-Token-ID': jwtUtils.getRefreshTokenIDFromCookie() || '',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ idRefreshToken }),
       });

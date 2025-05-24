@@ -280,10 +280,7 @@ const MyDirections = () => {
     setLoading(true);
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/directions`, {
-        method: 'GET',
-        headers: {
-          'X-Refresh-Token-ID': jwtUtils.getRefreshTokenIDFromCookie() || '',
-        },
+        method: 'GET'
       });
       const data = await response.json();
       if (!response.ok) {
@@ -364,8 +361,7 @@ const MyDirections = () => {
       const response = await fetchWithAuth(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          'X-Refresh-Token-ID': jwtUtils.getRefreshTokenIDFromCookie() || '',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload),
       });
@@ -433,10 +429,7 @@ const MyDirections = () => {
 
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/directions/${idDireccion}`, {
-        method: 'DELETE',
-        headers: {
-          'X-Refresh-Token-ID': jwtUtils.getRefreshTokenIDFromCookie() || '',
-        },
+        method: 'DELETE'
       });
 
       const data = await response.json();
@@ -469,10 +462,7 @@ const MyDirections = () => {
 
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/directions/${idDireccion}/select`, {
-        method: 'PATCH',
-        headers: {
-          'X-Refresh-Token-ID': jwtUtils.getRefreshTokenIDFromCookie() || '',
-        },
+        method: 'PATCH'
       });
 
       const data = await response.json();
