@@ -619,7 +619,7 @@ const MyDirections = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Dirección Detallada
+              Dirección Shalom (Donde se va a mandar el pedido)
             </label>
             <input
               type="text"
@@ -629,7 +629,7 @@ const MyDirections = () => {
               className={`block w-full rounded-md border ${
                 formErrors.direccion_shalom ? 'border-red-500' : 'border-gray-300'
               } shadow-sm focus:border-pink-500 focus:ring-pink-500 transition-colors bg-white py-2 px-3`}
-              placeholder="Ej. Av. Principal 123"
+              placeholder="Ej. Shalom Calle 123 - Mz. 45 - Lote 12"
             />
             {formErrors.direccion_shalom && (
               <p className="text-red-500 text-xs mt-1">{formErrors.direccion_shalom}</p>
