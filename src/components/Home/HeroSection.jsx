@@ -5,6 +5,7 @@ import 'slick-carousel/slick/slick-theme.css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import NetworkError from '../../components/Reutilizables/NetworkError';
 import API_BASE_URL from '../../js/urlHelper';
 
 // Custom arrow components
@@ -96,9 +97,7 @@ const HeroSection = ({ isVisible }) => {
             {loading ? (
               <div className="w-full h-64 bg-gray-200 animate-pulse rounded-lg" />
             ) : error ? (
-              <div className="w-full h-64 flex items-center justify-center bg-gray-100 rounded-lg">
-                <p className="text-red-500">{error}</p>
-              </div>
+              <NetworkError /> // Use NetworkError component instead of inline error message
             ) : (
               <div className="rounded-lg overflow-hidden shadow-lg">
                 <Slider {...settings}>
