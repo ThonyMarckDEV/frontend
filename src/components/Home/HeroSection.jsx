@@ -3,6 +3,9 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
+import API_BASE_URL from '../../js/urlHelper';
 
 // Custom arrow components
 const PrevArrow = ({ onClick }) => (
@@ -24,35 +27,28 @@ const NextArrow = ({ onClick }) => (
 );
 
 const HeroSection = ({ isVisible }) => {
-  const [images, setImages] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Static list of makeup images from Unsplash
+  // Fetch new products from the API using Axios
   useEffect(() => {
-    const makeupImages = [
-      {
-        src: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
-        alt: 'Paleta de sombras de ojos coloridas'
-      },
-      {
-        src: 'https://images.unsplash.com/photo-1522335786678-acb93a6a231d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
-        alt: 'Labiales de varios tonos'
-      },
-      {
-        src: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
-        alt: 'Cepillos de maquillaje'
-      },
-      {
-        src: 'https://images.unsplash.com/photo-1512495039889-52a3b799c9b2?ixlib=rb-4.0.3&auto format&fit=crop&w=1350&q=80',
-        alt: 'Productos de maquillaje organizados'
-      },
-      {
-        src: 'https://images.unsplash.com/photo-1530023367846-d9a7a8c684aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80',
-        alt: 'Maquillaje con tonos vibrantes'
+    const fetchNewProducts = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/new-products`);
+        if (response.data.success) {
+          setProducts(response.data.data);
+          setLoading(false);
+        } else {
+          throw new Error('Error en la respuesta de la API');
+        }
+      } catch (err) {
+        setError(err.message || 'Error al obtener productos nuevos');
+        setLoading(false);
       }
-    ];
-    setImages(makeupImages);
-    setLoading(false);
+    };
+
+    fetchNewProducts();
   }, []);
 
   // Slider settings
@@ -72,7 +68,7 @@ const HeroSection = ({ isVisible }) => {
       {
         breakpoint: 768,
         settings: {
-          arrows: false, // Hide arrows on mobile for cleaner UI
+          arrows: false,
           dots: true,
         },
       },
@@ -99,17 +95,26 @@ const HeroSection = ({ isVisible }) => {
           <div className="w-full md:w-1/2 relative order-1 md:order-2">
             {loading ? (
               <div className="w-full h-64 bg-gray-200 animate-pulse rounded-lg" />
+            ) : error ? (
+              <div className="w-full h-64 flex items-center justify-center bg-gray-100 rounded-lg">
+                <p className="text-red-500">{error}</p>
+              </div>
             ) : (
               <div className="rounded-lg overflow-hidden shadow-lg">
                 <Slider {...settings}>
-                  {images.map((image, index) => (
-                    <div key={index}>
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="w-full h-auto object-cover"
-                        style={{ maxHeight: '400px' }}
-                      />
+                  {products.map((product) => (
+                    <div key={product.idProducto}>
+                      <Link
+                        to={`/products?name=${encodeURIComponent(product.nombreProducto).replace(/%20/g, '+')}`}
+                        className="block"
+                      >
+                        <img
+                          src={product.imagen}
+                          alt={product.nombreProducto}
+                          className="w-full h-auto object-cover hover:opacity-90 transition-opacity"
+                          style={{ maxHeight: '400px' }}
+                        />
+                      </Link>
                     </div>
                   ))}
                 </Slider>
