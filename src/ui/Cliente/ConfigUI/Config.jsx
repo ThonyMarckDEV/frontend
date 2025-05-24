@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { Settings, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ActiveSessions from '../../../components/ui/Cliente/ConfigComponents/ActiveSessions';
+import MyDirections from '../../../components/ui/Cliente/ConfigComponents/MyDirections';
 
 const Config = () => {
   const [activeTab, setActiveTab] = useState('sessions');
   const navigate = useNavigate();
 
   const tabs = [
+    { id: 'directions', label: 'Mis Direcciones', component: <MyDirections /> },
     { id: 'sessions', label: 'Sesiones Activas', component: <ActiveSessions /> },
-    // Otros tabs (e.g., perfil, seguridad) pueden añadirse aquí
   ];
 
   return (
