@@ -14,13 +14,6 @@ export const getClaims = (token) => {
   }
 };
 
-// Función para obtener el username de usuario
-//export const getUsername = (token) => decodeToken(token)?.sub ?? null;
-
-export const getUsername = (token) => jwtDecode(token)?.username ?? null;
-
-// Función para obtener el nombre de usuario
-export const getFullName = (token) => jwtDecode(token)?.fullName ?? null;
 
 // Función para obtener el rol del usuario
 export const getUserRole = (token) => jwtDecode(token)?.rol ?? null;
@@ -33,6 +26,12 @@ export const getUserID = (token) => jwtDecode(token)?.sub ?? null;
 
 // Función para obtener el id carrito del usuario
 export const getIdCarrito = (token) => jwtDecode(token)?.idCarrito ?? null;
+
+// Función para obtener el google_user del usuario
+export const getGoogle_User = (token) => jwtDecode(token)?.google_user ?? null;
+
+// Función para obtener el email_verified del usuario
+export const getEmail_Verified = (token) => jwtDecode(token)?.email_verified ?? null;
 
 // // Función para verificar si el token está expirado
 export const isTokenExpired = (token) => {
@@ -138,8 +137,6 @@ export const setAccessTokenInCookie = (token) => {
 
 
 export default {
-  getUsername,
-  getFullName,
   getUserRole,
   isTokenExpired,
   getTokenExpirationDate,
@@ -152,5 +149,7 @@ export default {
   setAccessTokenInCookie,
   getUserID,
   getRefreshTokenIDFromCookie,
-  getIdCarrito
+  getIdCarrito,
+  getGoogle_User,
+  getEmail_Verified
 };
