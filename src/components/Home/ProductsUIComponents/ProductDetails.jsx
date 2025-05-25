@@ -1,4 +1,3 @@
-// src/components/Home/ProductsUIComponents/ProductDetails.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Carousel } from 'react-responsive-carousel';
@@ -8,10 +7,10 @@ import jwtUtils from '../../../utilities/jwtUtils';
 import { fetchWithAuth } from '../../../js/authToken';
 import { toast } from 'react-toastify';
 import LoadingScreen from '../../../components/LoadingScreen';
-import { CartContext } from '../../../context/CartContext'; // Import CartContext
+import { CartContext } from '../../../context/CartContext';
 
 const ProductDetails = ({ product, isOpen, onClose }) => {
-  const { updateCartCount } = useContext(CartContext); // Access updateCartCount from context
+  const { updateCartCount } = useContext(CartContext);
   const [selectedModel, setSelectedModel] = useState(product.selectedModel || {});
   const [quantity, setQuantity] = useState(1);
   const [showFullCharacteristics, setShowFullCharacteristics] = useState(false);
@@ -19,6 +18,20 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      // Save the current overflow style
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      
+      // Cleanup: Restore original overflow when modal closes or component unmounts
+      return () => {
+        document.body.style.overflow = originalOverflow || '';
+      };
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -119,7 +132,7 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
 
       toast.success('Producto agregado al carrito exitosamente');
       setQuantity(1);
-      await updateCartCount(); // Update cart count
+      await updateCartCount();
       onClose();
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
@@ -142,18 +155,16 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
     <>
       {isLoading && <LoadingScreen />}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 sm:items-center sm:justify-center"
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
         onClick={onClose}
       >
         <div
-          className={`bg-white rounded-lg w-full mx-tape://github.com/4xAI/sentry
-            max-h-[90vh] sm:max-w-2xl sm:mx-auto ${
-              showFullCharacteristics ? 'h-full sm:h-auto' : 'h-auto'
-            } overflow-y-auto sm:overflow-y-auto relative`}
+          className="bg-white rounded-lg w-full h-full sm:max-w-2xl sm:h-auto sm:max-h-[90vh] flex flex-col"
           onClick={handleModalBodyClick}
         >
-          <div className="fixed top-0 left-0 right-0 bg-white border-b z-10 sm:static sm:border-b sm:z-auto">
-            <div className="flex justify-between items-center p-6">
+          {/* Fixed Header */}
+          <div className="fixed top-0 left-0 right-0 bg-white border-b z-10 p-6 sm:static sm:border-b sm:z-auto">
+            <div className="flex justify-between items-center">
               <h2 className="text-2xl font-serif text-pink-800">{product.nombreProducto}</h2>
               <button
                 onClick={onClose}
@@ -164,7 +175,8 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
             </div>
           </div>
 
-          <div className="p-6 pt-20 sm:pt-6">
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto pt-20 sm:pt-6 px-6 pb-20 sm:pb-6">
             <Carousel
               showThumbs={false}
               showStatus={false}
@@ -256,30 +268,33 @@ const ProductDetails = ({ product, isOpen, onClose }) => {
                   </button>
                 )}
               </div>
-
-              <button
-                onClick={handleAddToCart}
-                disabled={selectedModel.stock?.cantidad <= 0 || isLoading}
-                className={`w-full py-2 rounded text-white transition ${
-                  selectedModel.stock?.cantidad <= 0 || isLoading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-pink-600 hover:bg-pink-700'
-                }`}
-              >
-                {isLoading ? 'Agregando...' : 'Agregar al carrito'}
-              </button>
             </div>
+          </div>
+
+          {/* Fixed Add to Cart Button */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 sm:static sm:border-t-0 sm:p-0 sm:mt-4">
+            <button
+              onClick={handleAddToCart}
+              disabled={selectedModel.stock?.cantidad <= 0 || isLoading}
+              className={`w-full py-2 rounded text-white transition ${
+                selectedModel.stock?.cantidad <= 0 || isLoading
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-pink-600 hover:bg-pink-700'
+              }`}
+            >
+              {isLoading ? 'Agregando...' : 'Agregar al carrito'}
+            </button>
           </div>
         </div>
       </div>
 
       {showLoginModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] sm:items-center sm:justify-center"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]"
           onClick={handleCloseLoginModal}
         >
           <div
-            className="bg-white rounded-lg w-full mx-4 max-w-md sm:mx-auto p-6"
+            className="bg-white rounded-lg w-full mx-4 max-w-md p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">

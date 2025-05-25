@@ -1,6 +1,17 @@
-import React from "react";
+import React, { useEffect } from 'react';
 
 function LoadingScreen() {
+  // Prevent background scrolling when LoadingScreen is displayed
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // Cleanup: Restore original overflow when component unmounts
+    return () => {
+      document.body.style.overflow = originalOverflow || '';
+    };
+  }, []);
+
   return (
     <div className="fixed inset-0 flex justify-center items-center bg-white bg-opacity-50 z-[9999]">
       {/* Spinner */}
