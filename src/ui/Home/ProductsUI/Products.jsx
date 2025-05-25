@@ -228,7 +228,7 @@ const Products = () => {
         <div className="container mx-auto px-4">
           <button
             onClick={toggleFilterSidebar}
-            className="fixed top-[80px] right-4 z-50 p-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 transition-colors"
+            className="fixed top-[80px] right-4 z-40 p-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 transition-colors"
             aria-label="Toggle filter sidebar"
           >
             <svg
