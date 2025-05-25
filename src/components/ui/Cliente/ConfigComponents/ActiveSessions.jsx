@@ -13,6 +13,8 @@ const ActiveSessions = () => {
   const [deleting, setDeleting] = useState(null);
   const navigate = useNavigate();
   const [loadingScreen, setLoadingScreen] = useState(false);
+  const refresh_token = jwtUtils.getRefreshTokenFromCookie();
+  const SesionID = jwtUtils.getRefreshTokenIDFromCookie(refresh_token);
 
   useEffect(() => {
     fetchSessions();
@@ -28,7 +30,12 @@ const ActiveSessions = () => {
       if (!response.ok) {
         throw new Error(data.message || 'Error al obtener las sesiones');
       }
-      setSessions(data.sessions);
+      // Map sessions to set is_current based on SesionID comparison
+      const updatedSessions = data.sessions.map((session) => ({
+        ...session,
+        is_current: session.idRefreshToken === SesionID,
+      }));
+      setSessions(updatedSessions);
     } catch (error) {
       toast.error('Error al obtener las sesiones activas');
       console.error('Error fetching sessions:', error);
@@ -39,12 +46,12 @@ const ActiveSessions = () => {
 
   const deleteSession = async (idRefreshToken) => {
     setDeleting(idRefreshToken);
-      setLoadingScreen(true);
+    setLoadingScreen(true);
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/sessions`, {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ idRefreshToken }),
       });
@@ -54,7 +61,7 @@ const ActiveSessions = () => {
       }
 
       toast.success('Sesión eliminada correctamente');
-      if (data.is_current_session) {
+      if (idRefreshToken === SesionID) {
         jwtUtils.removeTokensFromCookie();
         navigate('/login');
         window.location.reload();
