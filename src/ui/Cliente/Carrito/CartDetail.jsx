@@ -109,7 +109,7 @@ const CartDetail = () => {
   };
 
   const fetchCartDetails = async () => {
-    if (!token || !idCarrito) {
+    if (!refresh_token || !idCarrito) {
       setError('No se encontró un carrito válido. Por favor, inicia sesión.');
       setLoading(false);
       return;
