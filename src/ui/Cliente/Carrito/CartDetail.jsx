@@ -19,8 +19,8 @@ const CartDetail = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState({});
   const navigate = useNavigate();
-  const token = jwtUtils.getRefreshTokenFromCookie();
-  const idCarrito = jwtUtils.getIdCarrito(token);
+  const refresh_token = jwtUtils.getRefreshTokenFromCookie();
+  const idCarrito = jwtUtils.getIdCarrito(refresh_token);
   const { updateCartCount } = useContext(CartContext);
 
   const updateTimeouts = useRef({});

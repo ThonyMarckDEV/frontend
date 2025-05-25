@@ -1,19 +1,19 @@
 // jwtUtils.jsx
-import { jwtDecode } from "jwt-decode";
 
-
-// Función para obtener el ID del usuario
-//export const getIdUsuario = (token) => decodeToken(token)?.idUsuario ?? null;
-
-export const getClaims = (token) => {
+// Función para decodificar el payload de un JWT manualmente
+const jwtDecode = (token) => {
   try {
-    return jwtDecode(token) ?? null;
+    const base64Url = token.split('.')[1]; // Obtén la parte del payload
+    if (!base64Url) throw new Error("Token inválido o incompleto");
+    
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // Normaliza el formato Base64Url
+    const jsonPayload = atob(base64); // Decodifica Base64 a texto plano
+    return JSON.parse(jsonPayload); // Convierte el texto en un objeto JSON
   } catch (error) {
     console.error("Error decoding token:", error);
     return null;
   }
 };
-
 
 // Función para obtener el rol del usuario
 export const getUserRole = (token) => jwtDecode(token)?.rol ?? null;
