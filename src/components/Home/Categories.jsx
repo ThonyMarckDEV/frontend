@@ -1,10 +1,9 @@
-// src/components/Home/Categories.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../../js/urlHelper';
 import LoadingScreen from '../../components/LoadingScreen';
-import NetworkError from '../../components/Reutilizables/NetworkError'; // Import NetworkError
+import NetworkError from '../../components/Reutilizables/NetworkError';
 
 const Categories = ({ isVisible }) => {
   const [categories, setCategories] = useState([]);
@@ -12,7 +11,7 @@ const Categories = ({ isVisible }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loadingSubcategories, setLoadingSubcategories] = useState(false);
   const [error, setError] = useState(null);
-  const [isNetworkError, setIsNetworkError] = useState(false); // New state for network errors
+  const [isNetworkError, setIsNetworkError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const categoriesPerPage = 4;
   const navigate = useNavigate();
@@ -39,7 +38,7 @@ const Categories = ({ isVisible }) => {
       } catch (err) {
         console.error('Fetch categories error:', err);
         if (err.message.includes('Network Error') || !err.response) {
-          setIsNetworkError(true); // Set network error state
+          setIsNetworkError(true);
         } else {
           setError('Failed to load categories. Please try again later.');
           setIsNetworkError(false);
@@ -75,7 +74,7 @@ const Categories = ({ isVisible }) => {
     } catch (err) {
       console.error('Fetch subcategories error:', err);
       if (err.message.includes('Network Error') || !err.response) {
-        setIsNetworkError(true); // Set network error state
+        setIsNetworkError(true);
       } else {
         setError('Failed to load subcategories. Please try again later.');
         setIsNetworkError(false);
@@ -90,11 +89,6 @@ const Categories = ({ isVisible }) => {
     navigate(`/products/${categoryId}/${subcategoryId}`, {
       state: { subcategoryName },
     });
-  };
-
-  // Close sidebar
-  const closeSidebar = () => {
-    setSelectedCategory(null);
   };
 
   // Pagination logic
@@ -135,9 +129,9 @@ const Categories = ({ isVisible }) => {
             Nuestras Categorías
           </h2>
           {isNetworkError ? (
-            <NetworkError /> // Use NetworkError component
+            <NetworkError />
           ) : error ? (
-            <p className="text-center text-red-500 text-lg">{error}</p> // Fallback for other errors
+            <p className="text-center text-red-500 text-lg">{error}</p>
           ) : categories.length === 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 justify-items-center w-full">
               {[...Array(skeletonCount)].map((_, index) => (
@@ -150,7 +144,7 @@ const Categories = ({ isVisible }) => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 justify-items-center w-full">
               {currentCategories.map((category) => (
-                <div key={category.id} className="w-full max-w-xs">
+                <div key={category.id} className="w-full max-w-xs relative">
                   <div
                     className="group relative overflow-hidden rounded-lg shadow-md transition-transform transform hover:scale-105 cursor-pointer"
                     onClick={() => handleCategoryClick(category.id)}
@@ -158,7 +152,7 @@ const Categories = ({ isVisible }) => {
                     <img
                       src={category.image}
                       alt={category.name}
-                      className="w-full h-64 sm:h-80 object-cover"
+                      className="w-full h-64 sm:h-80 object-cover transition-all duration-500"
                       onError={(e) => {
                         console.error(`Failed to load image: ${category.image}`);
                         e.target.src = 'https://via.placeholder.com/300x400';
@@ -172,6 +166,42 @@ const Categories = ({ isVisible }) => {
                         </button>
                       </div>
                     </div>
+                    {/* Subcategories reveal */}
+                    {selectedCategory === category.id && (
+                      <div
+                        className="absolute inset-x-0 bottom-0 bg-white text-gray-800 rounded-b-lg shadow-lg transition-all duration-700 ease-in-out transform origin-bottom"
+                        style={{
+                          animation: 'slideUp 0.7s ease-in-out forwards',
+                        }}
+                      >
+                        <div className="p-4 max-h-64 overflow-y-auto">
+                          {subcategories[category.id]?.length > 0 ? (
+                            <ul className="space-y-2">
+                              {subcategories[category.id].map((subcategory) => (
+                                <li
+                                  key={subcategory.idSubCategoria}
+                                  className="text-sm sm:text-base text-gray-800 hover:text-pink-500 cursor-pointer transition-all duration-300 hover:pl-2"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSubcategoryClick(
+                                      category.id,
+                                      subcategory.idSubCategoria,
+                                      subcategory.nombreSubCategoria
+                                    );
+                                  }}
+                                >
+                                  {subcategory.nombreSubCategoria}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-gray-600 text-sm sm:text-base">
+                              No subcategories available
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -214,59 +244,22 @@ const Categories = ({ isVisible }) => {
               </button>
             </div>
           )}
-
-          {/* Sidebar for Subcategories */}
-          {selectedCategory && (
-            <div className="fixed top-0 left-0 h-full w-full sm:w-80 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out">
-              <div className="flex flex-col h-full">
-                <div className="flex justify-between items-center p-4 border-b">
-                  <h3 className="text-lg font-bold text-gray-800">
-                    {categories.find((cat) => cat.id === selectedCategory)?.name}
-                  </h3>
-                  <button
-                    onClick={closeSidebar}
-                    className="text-gray-600 hover:text-gray-800 text-2xl"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto p-4">
-                  {subcategories[selectedCategory]?.length > 0 ? (
-                    <ul className="space-y-2">
-                      {subcategories[selectedCategory].map((subcategory) => (
-                        <li
-                          key={subcategory.idSubCategoria}
-                          className="text-gray-800 hover:text-pink-500 cursor-pointer transition text-sm sm:text-base"
-                          onClick={() =>
-                            handleSubcategoryClick(
-                              selectedCategory,
-                              subcategory.idSubCategoria,
-                              subcategory.nombreSubCategoria
-                            )
-                          }
-                        >
-                          {subcategory.nombreSubCategoria}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-600 text-sm sm:text-base">
-                      No subcategories available
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-          {/* Overlay for mobile when sidebar is open */}
-          {selectedCategory && (
-            <div
-              className="fixed inset-0 bg-black/50 z-40 sm:hidden"
-              onClick={closeSidebar}
-            ></div>
-          )}
         </div>
       </div>
+
+      {/* CSS Animation */}
+      <style jsx>{`
+        @keyframes slideUp {
+          0% {
+            transform: scaleY(0);
+            opacity: 0;
+          }
+          100% {
+            transform: scaleY(1);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </>
   );
 };
