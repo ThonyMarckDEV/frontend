@@ -3,10 +3,9 @@ import { fetchWithAuth } from '../../../../js/authToken';
 import API_BASE_URL from '../../../../js/urlHelper';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { toast } from 'react-toastify';
 import markerIcon from '../../../../img/utilidades/shop.png';
 
-const PickupMethodCard = () => {
+const PickupMethodCard = ({ onAddressSelect }) => {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [pickupMethod, setPickupMethod] = useState('delivery');
@@ -20,8 +19,8 @@ const PickupMethodCard = () => {
   // Custom Leaflet marker icon
   const customIcon = L.icon({
     iconUrl: markerIcon,
-    iconSize: [40, 41], // Adjusted size as per your code
-    iconAnchor: [20, 41], // Adjusted anchor to center the wider icon
+    iconSize: [40, 41],
+    iconAnchor: [20, 41],
     popupAnchor: [1, -34],
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     shadowSize: [41, 41],
@@ -42,7 +41,6 @@ const PickupMethodCard = () => {
       }
     } catch (err) {
       setError('Error al cargar las direcciones: ' + err.message);
-      toast.error('Error al cargar las direcciones');
     } finally {
       setLoading(false);
     }
@@ -56,22 +54,17 @@ const PickupMethodCard = () => {
       });
       const data = await response.json();
       if (response.ok && data.success) {
-        setAddresses((prevAddresses) =>
-          prevAddresses.map((addr) => ({
-            ...addr,
-            estado: addr.idDireccion === addressId ? 1 : 0,
-          }))
-        );
+        await fetchAddresses(); // Refetch addresses on success
         setSelectedAddress(addressId);
-        toast.success('Dirección seleccionada correctamente');
+        onAddressSelect?.(data.message); // Notify parent of success
         setError(null);
       } else {
         setError(data?.message || 'Error al seleccionar la dirección');
-        toast.error('Error al seleccionar la dirección');
+        await fetchAddresses(); // Refetch addresses on error
       }
     } catch (err) {
       setError('Error al seleccionar la dirección: ' + err.message);
-      toast.error('Error al seleccionar la dirección');
+      await fetchAddresses(); // Refetch addresses on error
     } finally {
       setLoading(false);
     }
@@ -103,7 +96,7 @@ const PickupMethodCard = () => {
 
   const handleAddressSelect = (addressId) => {
     setSelectedAddress(addressId);
-    setActiveAddress(addressId); // Update active address on selection
+    setActiveAddress(addressId);
   };
 
   return (

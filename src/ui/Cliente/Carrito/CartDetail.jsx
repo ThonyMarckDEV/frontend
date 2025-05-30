@@ -242,8 +242,9 @@ const CartDetail = () => {
       <div className="flex-grow py-8 sm:py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {cartDetails.length > 0 ? (
-            <div className="flex flex-col lg:flex-row gap-6 max-w-5xl mx-auto">
-              <div className="lg:w-2/3">
+            <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+              {/* Cart Items */}
+              <div className="w-full">
                 <div className="bg-white rounded-2xl border border-pink-100 shadow-lg p-4 sm:p-6 max-h-[65vh] overflow-y-auto">
                   <div className="space-y-4">
                     {cartDetails.map((detail, index) => (
@@ -260,8 +261,12 @@ const CartDetail = () => {
                   </div>
                 </div>
               </div>
-              <div className="lg:w-1/3 space-y-6">
+              {/* Pickup Method */}
+              <div className="w-full">
                 <PickupMethodCard />
+              </div>
+              {/* Cart Summary */}
+              <div className="w-full">
                 <CartSummary
                   cartDetails={cartDetails}
                   calculateTotal={calculateTotal}
