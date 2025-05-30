@@ -9,7 +9,9 @@ import noProductsImage from '../../../img/utilidades/noproduct.webp';
 import { fetchWithAuth } from '../../../js/authToken';
 import jwtUtils from '../../../utilities/jwtUtils';
 import Swal from 'sweetalert2';
-import { debounce } from 'lodash';
+import CartItem from '../../../components/ui/Cliente/Carrito/CartItem';
+import CartSummary from '../../../components/ui/Cliente/Carrito/CartSummary';
+import PickupMethodCard from '../../../components/ui/Cliente/Carrito/PickupMethodCard';
 
 const CartDetail = () => {
   const [cartDetails, setCartDetails] = useState([]);
@@ -22,7 +24,6 @@ const CartDetail = () => {
   const refresh_token = jwtUtils.getRefreshTokenFromCookie();
   const idCarrito = jwtUtils.getIdCarrito(refresh_token);
   const { updateCartCount } = useContext(CartContext);
-
   const updateTimeouts = useRef({});
 
   const updateLocalQuantity = (idDetalle, newQuantity) => {
@@ -228,8 +229,6 @@ const CartDetail = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 via-white to-pink-50 text-gray-900">
       {isUpdating && <UpdateLoader />}
-      
-      {/* Header */}
       <div className="bg-white border-b border-pink-100 shadow-sm">
         <div className="container mx-auto px-4 py-6 sm:px-6">
           <div className="text-center">
@@ -240,150 +239,35 @@ const CartDetail = () => {
           </div>
         </div>
       </div>
-
       <div className="flex-grow py-8 sm:py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {cartDetails.length > 0 ? (
             <div className="flex flex-col lg:flex-row gap-6 max-w-5xl mx-auto">
-              {/* Products Section */}
               <div className="lg:w-2/3">
                 <div className="bg-white rounded-2xl border border-pink-100 shadow-lg p-4 sm:p-6 max-h-[65vh] overflow-y-auto">
                   <div className="space-y-4">
                     {cartDetails.map((detail, index) => (
-                      <div
+                      <CartItem
                         key={detail.idDetalle}
-                        className="bg-gray-50 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-pink-50 p-4 animate-fadeInUp"
-                        style={{ animationDelay: `${index * 100}ms` }}
-                      >
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                          {/* Product Image */}
-                          <div className="relative flex-shrink-0">
-                            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-gradient-to-br from-pink-50 to-white shadow-inner">
-                              <img
-                                src={detail.modelo?.imagenes?.[0]?.urlImagen || noProductsImage}
-                                alt={detail.producto?.nombreProducto || 'Producto'}
-                                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                              />
-                            </div>
-                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-pink-300 rounded-full flex items-center justify-center shadow-sm">
-                              <span className="text-white text-xs font-medium">{detail.cantidad}</span>
-                            </div>
-                          </div>
-
-                          {/* Product Info */}
-                          <div className="flex-grow w-full">
-                            <h3 className="text-lg sm:text-xl font-thin text-gray-800 tracking-wide truncate">
-                              {detail.producto?.nombreProducto || 'Producto Exclusivo'}
-                            </h3>
-                            <div className="mt-1 text-xs sm:text-sm text-gray-500 font-light space-y-1">
-                              <p className="truncate">
-                                <span className="uppercase text-xs tracking-widest">Modelo:</span> {detail.modelo?.nombreModelo || 'N/A'}
-                              </p>
-                              <p>
-                                <span className="uppercase text-xs tracking-widest">Disponibilidad:</span> {detail.modelo?.stock?.cantidad || 0} piezas
-                              </p>
-                            </div>
-                            <div className="mt-2 sm:mt-3">
-                              <div className="flex items-baseline space-x-2">
-                                <span className="text-sm sm:text-base text-gray-600 font-light">
-                                  S./ {(parseFloat(detail.producto?.precio) || 0).toFixed(2)}
-                                </span>
-                                <span className="text-xs text-gray-400 uppercase tracking-widest">por unidad</span>
-                              </div>
-                              <div className="mt-1 flex items-center">
-                                <span className="text-lg sm:text-xl font-light text-pink-400">
-                                  S./ {(parseFloat(detail.subtotal) || 0).toFixed(2)}
-                                </span>
-                                {pendingUpdates[detail.idDetalle] && (
-                                  <span className="ml-2 text-xs text-pink-300 animate-pulse">
-                                    ● Calculando...
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Quantity Controls */}
-                            <div className="flex items-center justify-between mt-3 sm:mt-4 gap-2 flex-wrap">
-                              <div className="flex items-center bg-pink-50 rounded-full border border-pink-200 p-1">
-                                <button
-                                  onClick={() => handleQuantityChange(detail.idDetalle, detail.cantidad - 1)}
-                                  disabled={detail.cantidad <= 1}
-                                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white text-pink-300 hover:bg-pink-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
-                                >
-                                  <svg width="8" height="2" viewBox="0 0 12 2" className="fill-current">
-                                    <rect width="12" height="2" rx="1"/>
-                                  </svg>
-                                </button>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  max="10"
-                                  value={detail.cantidad}
-                                  onChange={(e) => handleQuantityInputChange(detail.idDetalle, e.target.value)}
-                                  className="w-10 h-7 text-center bg-transparent text-gray-800 font-light text-sm focus:outline-none"
-                                  onBlur={(e) => {
-                                    const value = parseInt(e.target.value) || 1;
-                                    const clampedValue = Math.max(1, Math.min(10, value));
-                                    if (value !== clampedValue) {
-                                      handleQuantityChange(detail.idDetalle, clampedValue);
-                                    }
-                                  }}
-                                />
-                                <button
-                                  onClick={() => handleQuantityChange(detail.idDetalle, detail.cantidad + 1)}
-                                  disabled={detail.cantidad >= 10 || detail.cantidad >= (detail.modelo?.stock?.cantidad || 0)}
-                                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white text-pink-300 hover:bg-pink-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
-                                >
-                                  <svg width="8" height="8" viewBox="0 0 12 12" className="fill-current">
-                                    <rect x="5" y="0" width="2" height="12" rx="1"/>
-                                    <rect x="0" y="5" width="12" height="2" rx="1"/>
-                                  </svg>
-                                </button>
-                              </div>
-                              <button
-                                onClick={() => handleRemoveItem(detail.idDetalle)}
-                                className="px-3 py-1 text-xs uppercase tracking-widest text-gray-400 hover:text-pink-400 border border-gray-200 hover:border-pink-200 rounded-full transition-all duration-200"
-                              >
-                                Retirar
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                        detail={detail}
+                        index={index}
+                        handleQuantityChange={handleQuantityChange}
+                        handleQuantityInputChange={handleQuantityInputChange}
+                        handleRemoveItem={handleRemoveItem}
+                        pendingUpdates={pendingUpdates}
+                      />
                     ))}
                   </div>
                 </div>
               </div>
-
-              {/* Summary Section */}
-              <div className="lg:w-1/3">
-                <div className="bg-white rounded-2xl border border-pink-100 shadow-lg p-6 sticky top-4">
-                  <h3 className="text-lg font-thin text-gray-800 tracking-widest uppercase mb-4 text-center">
-                    Resumen
-                  </h3>
-                  <div className="border-t border-pink-100 pt-4">
-                    <div className="flex justify-between items-baseline mb-6">
-                      <span className="text-base font-light text-gray-600">Total</span>
-                      <div className="text-right">
-                        <div className="text-2xl font-thin text-pink-400">
-                          S./ {calculateTotal()}
-                        </div>
-                        {Object.keys(pendingUpdates).length > 0 && (
-                          <div className="text-xs text-pink-300 animate-pulse mt-1">
-                            Actualizando...
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => navigate('/checkout')}
-                      disabled={Object.keys(pendingUpdates).length > 0}
-                      className="w-full py-3 bg-pink-300 hover:bg-pink-400 text-white font-light tracking-[0.15em] uppercase text-xs sm:text-sm rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                    >
-                      {Object.keys(pendingUpdates).length > 0 ? 'Procesando...' : 'Finalizar Compra'}
-                    </button>
-                  </div>
-                </div>
+              <div className="lg:w-1/3 space-y-6">
+                <PickupMethodCard />
+                <CartSummary
+                  cartDetails={cartDetails}
+                  calculateTotal={calculateTotal}
+                  pendingUpdates={pendingUpdates}
+                  navigate={navigate}
+                />
               </div>
             </div>
           ) : (
