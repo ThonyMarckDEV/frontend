@@ -119,14 +119,14 @@ const Orders = () => {
                   key={order.idPedido}
                   className="bg-white rounded-lg border border-pink-100 shadow-lg overflow-hidden relative"
                 >
-                  {/* Status badge with GIF in top-right corner */}
+                  {/* Status badge with larger GIF in top-right corner */}
                   <div className="absolute top-4 right-4 flex items-center gap-2">
                     <img
                       src={statusConfig[order.estado]?.gif || noProductImage}
                       alt={statusConfig[order.estado]?.name || 'Estado desconocido'}
-                      className="w-12 h-12 object-contain"
+                      className="w-16 h-16 object-contain"
                     />
-                    <span className="text-sm font-light text-pink-400 bg-pink-50 px-2 py-1 rounded-full">
+                    <span className="text-sm font-light text-pink-400 bg-pink-50 px-3 py-1 rounded-full shadow-sm">
                       {statusConfig[order.estado]?.name || 'Estado desconocido'}
                     </span>
                   </div>
@@ -135,22 +135,40 @@ const Orders = () => {
                     className="p-6 cursor-pointer hover:bg-pink-50 transition-all duration-200"
                     onClick={() => toggleOrderDetails(order.idPedido)}
                   >
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div className="flex-grow">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex-grow space-y-2">
                         <h3 className="text-lg font-thin text-gray-800 tracking-widest uppercase">
                           Pedido #{order.idPedido}
                         </h3>
-                        <p className="text-sm text-gray-600 font-light mt-1">
-                          Fecha: {order.fecha_pedido}
-                        </p>
-                        <p className="text-sm text-gray-600 font-light">
-                          Total: S./ {order.total}
-                        </p>
-                        <p className="text-sm text-gray-600 font-light mt-2">
-                          {order.direccion}
-                        </p>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-6 8h6m-9 4h12m-6 4h6" />
+                            </svg>
+                            <p className="text-sm text-gray-600 font-light">
+                              Fecha: {order.fecha_pedido}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v8m4-4H8m-4 8h16M4 4h16v4H4z" />
+                            </svg>
+                            <p className="text-sm text-gray-600 font-light">
+                              Total: S./ {order.total}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L12 21m0 0l-5.657-4.343M12 21V3m5.657 13.657l3.536-3.536m-12.728 0l3.536 3.536M12 3h9m-9 0H3" />
+                            </svg>
+                            <p className="text-sm text-gray-600 font-light">
+                              {order.direccion}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4">
+                      {/* QR Code and Arrow moved below order details */}
+                      <div className="flex justify-end items-center gap-4 mt-4">
                         <QRCodeCanvas
                           value={String(order.idPedido)}
                           size={96}
@@ -166,6 +184,10 @@ const Orders = () => {
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent card click from triggering
+                            toggleOrderDetails(order.idPedido);
+                          }}
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                         </svg>
