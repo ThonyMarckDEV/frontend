@@ -124,7 +124,7 @@ const Orders = () => {
                     <img
                       src={statusConfig[order.estado]?.gif || noProductImage}
                       alt={statusConfig[order.estado]?.name || 'Estado desconocido'}
-                      className="w-16 h-16 object-contain"
+                      className="w-16 h-16 object-cover rounded-md" // Changed to object-cover for uniform size
                     />
                     <span className="text-sm font-light text-pink-400 bg-pink-50 px-3 py-1 rounded-full shadow-sm">
                       {statusConfig[order.estado]?.name || 'Estado desconocido'}
