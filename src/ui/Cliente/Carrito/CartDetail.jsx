@@ -21,8 +21,8 @@ const CartDetail = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState({});
   const [isSummaryOpen, setIsSummaryOpen] = useState(true);
-  const [pickupMethod, setPickupMethod] = useState('delivery'); // New state
-  const [selectedAddress, setSelectedAddress] = useState(null); // New state
+  const [pickupMethod, setPickupMethod] = useState('delivery');
+  const [selectedAddress, setSelectedAddress] = useState(null);
   const navigate = useNavigate();
   const refresh_token = jwtUtils.getRefreshTokenFromCookie();
   const idCarrito = jwtUtils.getIdCarrito(refresh_token);
@@ -30,12 +30,14 @@ const CartDetail = () => {
   const updateTimeouts = useRef({});
 
   const handleAddressSelect = (message, addressId) => {
-    toast.success(message);
+    if (message) {
+      toast.success(message); // Show toast only when a message is provided
+    }
     setSelectedAddress(addressId); // Update selected address
   };
 
   const handlePickupMethodChange = (method) => {
-    setPickupMethod(method); // Update pickup method
+    setPickupMethod(method);
   };
 
   const toggleSummary = () => {

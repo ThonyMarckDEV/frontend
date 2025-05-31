@@ -31,7 +31,8 @@ const PickupMethodCard = ({ onAddressSelect, onPickupMethodChange, pickupMethod,
       if (response.ok && data.message === 'Direcciones obtenidas correctamente') {
         setAddresses(data.directions);
         const activeAddress = data.directions.find((addr) => addr.estado === 1);
-        onAddressSelect?.(data.message, activeAddress?.idDireccion || data.directions[0]?.idDireccion || null);
+        // Only set the selected address ID without triggering a toast
+        onAddressSelect?.(null, activeAddress?.idDireccion || data.directions[0]?.idDireccion || null);
         setError(null);
       } else {
         setError(data?.message || 'Error al cargar las direcciones');
@@ -52,7 +53,8 @@ const PickupMethodCard = ({ onAddressSelect, onPickupMethodChange, pickupMethod,
       const data = await response.json();
       if (response.ok && data.success) {
         await fetchAddresses();
-        onAddressSelect?.(data.message, addressId);
+        // Trigger toast only when an address is actively selected
+        onAddressSelect?.('Dirección seleccionada correctamente', addressId);
         setError(null);
       } else {
         setError(data?.message || 'Error al seleccionar la dirección');
@@ -87,7 +89,7 @@ const PickupMethodCard = ({ onAddressSelect, onPickupMethodChange, pickupMethod,
   }, [pickupMethod]);
 
   const handleMethodChange = (method) => {
-    onPickupMethodChange(method); // Update parent state
+    onPickupMethodChange(method);
   };
 
   const handleAddressSelect = (addressId) => {
