@@ -171,7 +171,7 @@ const PickupMethodCard = ({ onAddressSelect, onPickupMethodChange, pickupMethod,
           </h4>
           <div
             ref={mapContainerRef}
-            className="w-full h-64 rounded-lg overflow-hidden shadow-inner"
+            className="w-full h-64 rounded-lg overflow-hidden shadow-inner z-50"
           ></div>
           <p className="text-sm text-gray-600 font-light mt-3 text-center">
             MelyMarckStore - Urb. Los Educadores Calle 7 A-12, Piura, Perú

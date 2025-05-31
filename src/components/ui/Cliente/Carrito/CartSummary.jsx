@@ -40,8 +40,7 @@ const CartSummary = ({ cartDetails, calculateTotal, pendingUpdates, isOpen, togg
 
       if (response.ok && data.success) {
         toast.success('¡Pedido creado exitosamente!');
-        await updateCartCount(); // Update cart count to reflect empty cart
-      //  navigate('/order-confirmation', { state: { order: data.data } });
+        navigate('/orders');
       } else {
         toast.error(data.message || 'Error al crear el pedido');
       }
@@ -56,7 +55,7 @@ const CartSummary = ({ cartDetails, calculateTotal, pendingUpdates, isOpen, togg
     <>
       {isLoading && <FetchWithGif />}
       <div
-        className={`fixed bottom-0 left-0 right-0 bg-white border-t border-pink-200 shadow-2xl transition-transform duration-300 ease-in-out z-[9999] ${
+        className={`fixed bottom-0 left-0 right-0 bg-white border-t border-pink-200 shadow-2xl transition-transform duration-300 ease-in-out z-50 ${
           isOpen ? 'translate-y-0' : 'translate-y-[calc(100%-2rem)]'
         }`}
       >
