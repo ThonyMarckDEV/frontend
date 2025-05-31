@@ -40,6 +40,7 @@ const CartSummary = ({ cartDetails, calculateTotal, pendingUpdates, isOpen, togg
 
       if (response.ok && data.success) {
         toast.success('¡Pedido creado exitosamente!');
+        await updateCartCount();
         navigate('/orders');
       } else {
         toast.error(data.message || 'Error al crear el pedido');
