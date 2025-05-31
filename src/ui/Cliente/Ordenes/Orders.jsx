@@ -23,14 +23,14 @@ const Orders = () => {
   const [isNetworkError, setIsNetworkError] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState(null);
 
-  // Map status numbers to names and GIFs
+  // Map status strings to names and GIFs, matching backend getEstadoText
   const statusConfig = {
-    0: { name: 'Pendiente de Pago', gif: pendingPayment },
-    1: { name: 'Aprobando Pago', gif: approvingPayment },
-    2: { name: 'En Preparación', gif: inPreparation },
-    3: { name: 'Enviado', gif: shipped },
-    4: { name: 'Listo para Recoger', gif: readyForPickup },
-    5: { name: 'Cancelado', gif: cancelled }
+    'Pendiente de pago': { name: 'Pendiente de Pago', gif: pendingPayment },
+    'Aprobando pago': { name: 'Aprobando Pago', gif: approvingPayment },
+    'En preparación': { name: 'En Preparación', gif: inPreparation },
+    'Enviado': { name: 'Enviado', gif: shipped },
+    'Listo para recoger': { name: 'Listo para Recoger', gif: readyForPickup },
+    'Cancelado': { name: 'Cancelado', gif: cancelled }
   };
 
   const fetchOrders = async () => {
