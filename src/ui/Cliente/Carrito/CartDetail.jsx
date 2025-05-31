@@ -4,11 +4,11 @@ import { CartContext } from '../../../context/CartContext';
 import API_BASE_URL from '../../../js/urlHelper';
 import FetchWithGif from '../../../components/Reutilizables/FetchWithGif';
 import NetworkError from '../../../components/Reutilizables/NetworkError';
-import Footer from '../../../components/Home/Footer';
 import noProductsImage from '../../../img/utilidades/noproduct.webp';
 import { fetchWithAuth } from '../../../js/authToken';
 import jwtUtils from '../../../utilities/jwtUtils';
 import Swal from 'sweetalert2';
+import { toast } from 'react-toastify';
 import CartItem from '../../../components/ui/Cliente/Carrito/CartItem';
 import CartSummary from '../../../components/ui/Cliente/Carrito/CartSummary';
 import PickupMethodCard from '../../../components/ui/Cliente/Carrito/PickupMethodCard';
@@ -20,11 +20,20 @@ const CartDetail = () => {
   const [isNetworkError, setIsNetworkError] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState({});
+  const [isSummaryOpen, setIsSummaryOpen] = useState(true); // Popup state
   const navigate = useNavigate();
   const refresh_token = jwtUtils.getRefreshTokenFromCookie();
   const idCarrito = jwtUtils.getIdCarrito(refresh_token);
   const { updateCartCount } = useContext(CartContext);
   const updateTimeouts = useRef({});
+
+  const handleAddressSelect = (message) => {
+    toast.success(message);
+  };
+
+  const toggleSummary = () => {
+    setIsSummaryOpen((prev) => !prev);
+  };
 
   const updateLocalQuantity = (idDetalle, newQuantity) => {
     if (newQuantity < 1 || newQuantity > 10) return;
@@ -40,7 +49,7 @@ const CartDetail = () => {
       })
     );
 
-    setPendingUpdates(prev => ({ ...prev, [idDetalle]: newQuantity }));
+    setPendingUpdates((prev) => ({ ...prev, [idDetalle]: newQuantity }));
   };
 
   const updateServerQuantity = async (idDetalle, quantity) => {
@@ -68,7 +77,7 @@ const CartDetail = () => {
         );
         await updateCartCount();
         setError(null);
-        setPendingUpdates(prev => {
+        setPendingUpdates((prev) => {
           const newPending = { ...prev };
           delete newPending[idDetalle];
           return newPending;
@@ -242,7 +251,7 @@ const CartDetail = () => {
       <div className="flex-grow py-8 sm:py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {cartDetails.length > 0 ? (
-            <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+            <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full pb-40"> {/* Added padding-bottom for popup */}
               {/* Cart Items */}
               <div className="w-full">
                 <div className="bg-white rounded-2xl border border-pink-100 shadow-lg p-4 sm:p-6 max-h-[65vh] overflow-y-auto">
@@ -263,16 +272,7 @@ const CartDetail = () => {
               </div>
               {/* Pickup Method */}
               <div className="w-full">
-                <PickupMethodCard />
-              </div>
-              {/* Cart Summary */}
-              <div className="w-full">
-                <CartSummary
-                  cartDetails={cartDetails}
-                  calculateTotal={calculateTotal}
-                  pendingUpdates={pendingUpdates}
-                  navigate={navigate}
-                />
+                <PickupMethodCard onAddressSelect={handleAddressSelect} />
               </div>
             </div>
           ) : (
@@ -302,7 +302,17 @@ const CartDetail = () => {
           )}
         </div>
       </div>
-      <Footer />
+      {/* Cart Summary Popup */}
+      {cartDetails.length > 0 && (
+        <CartSummary
+          cartDetails={cartDetails}
+          calculateTotal={calculateTotal}
+          pendingUpdates={pendingUpdates}
+          navigate={navigate}
+          isOpen={isSummaryOpen}
+          toggleSummary={toggleSummary}
+        />
+      )}
     </div>
   );
 };
