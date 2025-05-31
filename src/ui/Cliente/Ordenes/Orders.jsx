@@ -8,12 +8,30 @@ import { QRCodeCanvas } from 'qrcode.react';
 import noProductImage from '../../../img/utilidades/noproduct.webp';
 import CollapsibleOrderDetails from '../../../components/ui/Cliente/Ordenes/OrderDetails';
 
+// Import status GIFs
+import pendingPayment from '../../../img/states/pending_payment.gif';
+import approvingPayment from '../../../img/states/approving_payment.gif';
+import inPreparation from '../../../img/states/in_preparation.gif';
+import shipped from '../../../img/states/shipped.gif';
+import readyForPickup from '../../../img/states/ready_for_pickup.gif';
+import cancelled from '../../../img/states/cancelled.gif';
+
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isNetworkError, setIsNetworkError] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState(null);
+
+  // Map status numbers to names and GIFs
+  const statusConfig = {
+    0: { name: 'Pendiente de Pago', gif: pendingPayment },
+    1: { name: 'Aprobando Pago', gif: approvingPayment },
+    2: { name: 'En Preparación', gif: inPreparation },
+    3: { name: 'Enviado', gif: shipped },
+    4: { name: 'Listo para Recoger', gif: readyForPickup },
+    5: { name: 'Cancelado', gif: cancelled }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -99,8 +117,20 @@ const Orders = () => {
               {orders.map((order, index) => (
                 <div
                   key={order.idPedido}
-                  className="bg-white rounded-lg border border-pink-100 shadow-lg overflow-hidden"
+                  className="bg-white rounded-lg border border-pink-100 shadow-lg overflow-hidden relative"
                 >
+                  {/* Status badge with GIF in top-right corner */}
+                  <div className="absolute top-4 right-4 flex items-center gap-2">
+                    <img
+                      src={statusConfig[order.estado]?.gif || noProductImage}
+                      alt={statusConfig[order.estado]?.name || 'Estado desconocido'}
+                      className="w-12 h-12 object-contain"
+                    />
+                    <span className="text-sm font-light text-pink-400 bg-pink-50 px-2 py-1 rounded-full">
+                      {statusConfig[order.estado]?.name || 'Estado desconocido'}
+                    </span>
+                  </div>
+
                   <div
                     className="p-6 cursor-pointer hover:bg-pink-50 transition-all duration-200"
                     onClick={() => toggleOrderDetails(order.idPedido)}
@@ -112,9 +142,6 @@ const Orders = () => {
                         </h3>
                         <p className="text-sm text-gray-600 font-light mt-1">
                           Fecha: {order.fecha_pedido}
-                        </p>
-                        <p className="text-sm text-gray-600 font-light">
-                          Estado: <span className="text-pink-400">{order.estado}</span>
                         </p>
                         <p className="text-sm text-gray-600 font-light">
                           Total: S./ {order.total}
