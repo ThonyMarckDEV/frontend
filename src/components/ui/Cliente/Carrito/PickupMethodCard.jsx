@@ -5,10 +5,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIcon from '../../../../img/utilidades/shop.png';
 
-const PickupMethodCard = ({ onAddressSelect }) => {
+const PickupMethodCard = ({ onAddressSelect, onPickupMethodChange, pickupMethod, selectedAddress }) => {
   const [addresses, setAddresses] = useState([]);
-  const [selectedAddress, setSelectedAddress] = useState(null);
-  const [pickupMethod, setPickupMethod] = useState('delivery');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const mapRef = useRef(null);
@@ -16,7 +14,6 @@ const PickupMethodCard = ({ onAddressSelect }) => {
 
   const storePosition = [-5.1732944, -80.6596824]; // Piura store coordinates
 
-  // Custom Leaflet marker icon
   const customIcon = L.icon({
     iconUrl: markerIcon,
     iconSize: [40, 41],
@@ -34,7 +31,7 @@ const PickupMethodCard = ({ onAddressSelect }) => {
       if (response.ok && data.message === 'Direcciones obtenidas correctamente') {
         setAddresses(data.directions);
         const activeAddress = data.directions.find((addr) => addr.estado === 1);
-        setSelectedAddress(activeAddress?.idDireccion || data.directions[0]?.idDireccion || null);
+        onAddressSelect?.(data.message, activeAddress?.idDireccion || data.directions[0]?.idDireccion || null);
         setError(null);
       } else {
         setError(data?.message || 'Error al cargar las direcciones');
@@ -54,17 +51,16 @@ const PickupMethodCard = ({ onAddressSelect }) => {
       });
       const data = await response.json();
       if (response.ok && data.success) {
-        await fetchAddresses(); // Refetch addresses on success
-        setSelectedAddress(addressId);
-        onAddressSelect?.(data.message); // Notify parent of success
+        await fetchAddresses();
+        onAddressSelect?.(data.message, addressId);
         setError(null);
       } else {
         setError(data?.message || 'Error al seleccionar la dirección');
-        await fetchAddresses(); // Refetch addresses on error
+        await fetchAddresses();
       }
     } catch (err) {
       setError('Error al seleccionar la dirección: ' + err.message);
-      await fetchAddresses(); // Refetch addresses on error
+      await fetchAddresses();
     } finally {
       setLoading(false);
     }
@@ -91,11 +87,10 @@ const PickupMethodCard = ({ onAddressSelect }) => {
   }, [pickupMethod]);
 
   const handleMethodChange = (method) => {
-    setPickupMethod(method);
+    onPickupMethodChange(method); // Update parent state
   };
 
   const handleAddressSelect = (addressId) => {
-    setSelectedAddress(addressId);
     setActiveAddress(addressId);
   };
 
@@ -112,7 +107,7 @@ const PickupMethodCard = ({ onAddressSelect }) => {
             }`}
             onClick={() => handleMethodChange('delivery')}
           >
-            Envio
+            Envio Shalom
           </button>
           <button
             className={`px-4 py-2 text-sm font-light uppercase tracking-widest rounded-full transition-all duration-200 ${

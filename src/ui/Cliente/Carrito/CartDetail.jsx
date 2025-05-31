@@ -20,15 +20,22 @@ const CartDetail = () => {
   const [isNetworkError, setIsNetworkError] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [pendingUpdates, setPendingUpdates] = useState({});
-  const [isSummaryOpen, setIsSummaryOpen] = useState(true); // Popup state
+  const [isSummaryOpen, setIsSummaryOpen] = useState(true);
+  const [pickupMethod, setPickupMethod] = useState('delivery'); // New state
+  const [selectedAddress, setSelectedAddress] = useState(null); // New state
   const navigate = useNavigate();
   const refresh_token = jwtUtils.getRefreshTokenFromCookie();
   const idCarrito = jwtUtils.getIdCarrito(refresh_token);
   const { updateCartCount } = useContext(CartContext);
   const updateTimeouts = useRef({});
 
-  const handleAddressSelect = (message) => {
+  const handleAddressSelect = (message, addressId) => {
     toast.success(message);
+    setSelectedAddress(addressId); // Update selected address
+  };
+
+  const handlePickupMethodChange = (method) => {
+    setPickupMethod(method); // Update pickup method
   };
 
   const toggleSummary = () => {
@@ -37,7 +44,7 @@ const CartDetail = () => {
 
   const updateLocalQuantity = (idDetalle, newQuantity) => {
     if (newQuantity < 1 || newQuantity > 10) return;
-    
+
     setCartDetails((prevDetails) =>
       prevDetails.map((detail) => {
         if (detail.idDetalle === idDetalle) {
@@ -67,10 +74,10 @@ const CartDetail = () => {
         setCartDetails((prevDetails) =>
           prevDetails.map((detail) =>
             detail.idDetalle === idDetalle
-              ? { 
-                  ...detail, 
+              ? {
+                  ...detail,
                   cantidad: data.data.cantidad,
-                  subtotal: parseFloat(data.data.subtotal) 
+                  subtotal: parseFloat(data.data.subtotal),
                 }
               : detail
           )
@@ -131,7 +138,7 @@ const CartDetail = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const formattedData = data.data.map(detail => ({
+        const formattedData = data.data.map((detail) => ({
           ...detail,
           subtotal: parseFloat(detail.subtotal),
           producto: {
@@ -159,9 +166,9 @@ const CartDetail = () => {
 
   useEffect(() => {
     fetchCartDetails();
-    
+
     return () => {
-      Object.values(updateTimeouts.current).forEach(timeout => {
+      Object.values(updateTimeouts.current).forEach((timeout) => {
         if (timeout) clearTimeout(timeout);
       });
     };
@@ -229,11 +236,12 @@ const CartDetail = () => {
 
   if (loading) return <FetchWithGif />;
   if (isNetworkError) return <NetworkError />;
-  if (error) return (
-    <div className="text-center p-6 bg-white border border-pink-200 text-gray-800 rounded-xl shadow-lg mx-auto max-w-md">
-      <div className="font-light tracking-wide">{error}</div>
-    </div>
-  );
+  if (error)
+    return (
+      <div className="text-center p-6 bg-white border border-pink-200 text-gray-800 rounded-xl shadow-lg mx-auto max-w-md">
+        <div className="font-light tracking-wide">{error}</div>
+      </div>
+    );
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 via-white to-pink-50 text-gray-900">
@@ -251,8 +259,7 @@ const CartDetail = () => {
       <div className="flex-grow py-8 sm:py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {cartDetails.length > 0 ? (
-            <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full pb-40"> {/* Added padding-bottom for popup */}
-              {/* Cart Items */}
+            <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full pb-40">
               <div className="w-full">
                 <div className="bg-white rounded-2xl border border-pink-100 shadow-lg p-4 sm:p-6 max-h-[65vh] overflow-y-auto">
                   <div className="space-y-4">
@@ -270,9 +277,13 @@ const CartDetail = () => {
                   </div>
                 </div>
               </div>
-              {/* Pickup Method */}
               <div className="w-full">
-                <PickupMethodCard onAddressSelect={handleAddressSelect} />
+                <PickupMethodCard
+                  onAddressSelect={handleAddressSelect}
+                  onPickupMethodChange={handlePickupMethodChange}
+                  selectedAddress={selectedAddress}
+                  pickupMethod={pickupMethod}
+                />
               </div>
             </div>
           ) : (
@@ -302,7 +313,6 @@ const CartDetail = () => {
           )}
         </div>
       </div>
-      {/* Cart Summary Popup */}
       {cartDetails.length > 0 && (
         <CartSummary
           cartDetails={cartDetails}
@@ -311,6 +321,8 @@ const CartDetail = () => {
           navigate={navigate}
           isOpen={isSummaryOpen}
           toggleSummary={toggleSummary}
+          pickupMethod={pickupMethod}
+          selectedAddress={selectedAddress}
         />
       )}
     </div>
