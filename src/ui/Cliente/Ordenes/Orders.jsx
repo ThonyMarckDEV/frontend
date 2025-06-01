@@ -71,7 +71,6 @@ const Orders = () => {
     setExpandedOrder(expandedOrder === idPedido ? null : idPedido);
   };
 
-  // Get userId from JWT (memoized)
   const userId = useMemo(() => {
     try {
       const token = jwtUtils.getAccessTokenFromCookie();
@@ -86,7 +85,7 @@ const Orders = () => {
   const generateSecureQRContent = (order) => {
     if (!SECRET_KEY) {
      // console.error('SECRET_KEY is not defined. Please set REACT_APP_QR_SECRET_KEY in .env');
-      return String(order.idPedido); // Fallback to basic QR content
+      return String(order.idPedido);
     }
 
     const payload = {
