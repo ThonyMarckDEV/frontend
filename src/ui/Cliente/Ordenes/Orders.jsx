@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { fetchWithAuth } from '../../../js/authToken';
 import API_BASE_URL from '../../../js/urlHelper';
+import SECRET_KEY from '../../../js/qrHelper';
 import { toast } from 'react-toastify';
 import FetchWithGif from '../../../components/Reutilizables/FetchWithGif';
 import NetworkError from '../../../components/Reutilizables/NetworkError';
 import { QRCodeCanvas } from 'qrcode.react';
 import noProductImage from '../../../img/utilidades/noproduct.webp';
-import CollapsibleOrderDetails from '../../../components/ui/Cliente/Ordenes/OrderDetails';
+import CryptoJS from 'crypto-js';
+import jwtUtils from '../../../utilities/jwtUtils';
 
 // Import status GIFs
 import pendingPayment from '../../../img/states/pending_payment.gif';
@@ -22,15 +24,17 @@ const Orders = () => {
   const [error, setError] = useState(null);
   const [isNetworkError, setIsNetworkError] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalQRContent, setModalQRContent] = useState('');
 
-  // Map status strings to names and GIFs, matching backend getEstadoText
+  // Map status strings to names, GIFs, and colors
   const statusConfig = {
     'Pendiente de pago': { name: 'Pendiente de Pago', gif: pendingPayment, color: 'bg-amber-100 text-amber-700 border-amber-200' },
     'Aprobando pago': { name: 'Aprobando Pago', gif: approvingPayment, color: 'bg-blue-100 text-blue-700 border-blue-200' },
     'En preparación': { name: 'En Preparación', gif: inPreparation, color: 'bg-purple-100 text-purple-700 border-purple-200' },
     'Enviado': { name: 'Enviado', gif: shipped, color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
     'Listo para recoger': { name: 'Listo para Recoger', gif: readyForPickup, color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-    'Cancelado': { name: 'Cancelado', gif: cancelled, color: 'bg-rose-100 text-rose-700 border-rose-200' }
+    'Cancelado': { name: 'Cancelado', gif: cancelled, color: 'bg-rose-100 text-rose-700 border-rose-200' },
   };
 
   const fetchOrders = async () => {
@@ -67,6 +71,61 @@ const Orders = () => {
     setExpandedOrder(expandedOrder === idPedido ? null : idPedido);
   };
 
+  // Get userId from JWT (memoized)
+  const userId = useMemo(() => {
+    try {
+      const token = jwtUtils.getAccessTokenFromCookie();
+      return jwtUtils.getUserID(token) || 'unknown-user';
+    } catch (err) {
+      console.error('Error getting userId from JWT:', err);
+      return 'unknown-user';
+    }
+  }, []);
+
+  // Generate secure QR code content
+  const generateSecureQRContent = (order) => {
+    if (!SECRET_KEY) {
+     // console.error('SECRET_KEY is not defined. Please set REACT_APP_QR_SECRET_KEY in .env');
+      return String(order.idPedido); // Fallback to basic QR content
+    }
+
+    const payload = {
+      idPedido: order.idPedido,
+      userId,
+      timestamp: order.fecha_pedido,
+    };
+
+    const payloadString = JSON.stringify(payload);
+    try {
+      const hash = CryptoJS.HmacSHA256(payloadString, SECRET_KEY).toString(CryptoJS.enc.Hex);
+      return JSON.stringify({ payload: payloadString, hash });
+    } catch (err) {
+    //  console.error('Error generating HMAC:', err);
+      return String(order.idPedido); // Fallback
+    }
+  };
+
+  // Memoize QR content for each order
+  const qrContentMap = useMemo(() => {
+    const map = {};
+    orders.forEach((order) => {
+      if (order.recojo_local === 1) {
+        map[order.idPedido] = generateSecureQRContent(order);
+      }
+    });
+    return map;
+  }, [orders, userId]);
+
+  const openQRModal = (qrContent) => {
+    setModalQRContent(qrContent);
+    setIsModalOpen(true);
+  };
+
+  const closeQRModal = () => {
+    setIsModalOpen(false);
+    setModalQRContent('');
+  };
+
   if (loading) return <FetchWithGif />;
   if (isNetworkError) return <NetworkError />;
   if (error)
@@ -79,7 +138,6 @@ const Orders = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-rose-50 text-gray-800">
-      {/* Header simplificado */}
       <div className="bg-white border-b border-pink-100 shadow-sm">
         <div className="container mx-auto px-4 py-6 sm:px-6">
           <div className="text-center">
@@ -108,7 +166,7 @@ const Orders = () => {
                   Explora nuestra colección para realizar tu primer pedido
                 </p>
                 <button
-                  onClick={() => window.location.href = '/products'}
+                  onClick={() => (window.location.href = '/products')}
                   className="px-6 py-3 bg-pink-300 hover:bg-pink-400 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
                 >
                   Explorar Colección
@@ -117,27 +175,28 @@ const Orders = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order, index) => (
+              {orders.map((order) => (
                 <div
                   key={order.idPedido}
                   className="bg-white rounded-2xl border border-pink-100 shadow-lg hover:shadow-xl overflow-hidden relative min-h-[240px] transition-all duration-300 hover:-translate-y-1"
                 >
-                  {/* Status badge simplificado */}
                   <div className="absolute top-4 right-4 flex items-center gap-3">
                     <img
                       src={statusConfig[order.estado]?.gif || noProductImage}
                       alt={statusConfig[order.estado]?.name || 'Estado desconocido'}
                       className="w-12 h-12 object-cover rounded-lg shadow-sm"
                     />
-                    <span className={`text-sm font-medium px-3 py-1 rounded-full ${
-                      statusConfig[order.estado]?.color || 'bg-gray-100 text-gray-700'
-                    }`}>
+                    <span
+                      className={`text-sm font-medium px-3 py-1 rounded-full ${
+                        statusConfig[order.estado]?.color || 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
                       {statusConfig[order.estado]?.name || 'Estado desconocido'}
                     </span>
                   </div>
 
                   <div
-                    className="p-6 pt-20 cursor-pointer hover:bg-pink-90 transition-colors duration-200"
+                    className="p-6 pt-20 cursor-pointer hover:bg-pink-50 transition-colors duration-200"
                     onClick={() => toggleOrderDetails(order.idPedido)}
                   >
                     <div className="flex flex-col gap-4">
@@ -145,7 +204,6 @@ const Orders = () => {
                         <h3 className="text-lg font-light text-gray-700 tracking-wide">
                           Pedido #{order.idPedido}
                         </h3>
-                        
                         <div className="space-y-2">
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,14 +211,14 @@ const Orders = () => {
                             </svg>
                             <p className="text-sm text-gray-600">Fecha: {order.fecha_pedido}</p>
                           </div>
-                          
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                             </svg>
-                            <p className="text-sm text-gray-600">Total: <span className="font-semibold text-gray-700">S./ {order.total}</span></p>
+                            <p className="text-sm text-gray-600">
+                              Total: <span className="font-semibold text-gray-700">S./ {order.total}</span>
+                            </p>
                           </div>
-                          
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -170,13 +228,17 @@ const Orders = () => {
                           </div>
                         </div>
                       </div>
-                      
-                      {/* QR Code y botón simplificados */}
                       <div className="flex justify-between items-center pt-4 border-t border-pink-100">
                         {order.recojo_local === 1 && (
-                          <div className="bg-pink-50 p-3 rounded-xl">
+                          <div
+                            className="bg-pink-50 p-3 rounded-xl cursor-pointer hover:bg-pink-100 transition-colors duration-200"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openQRModal(qrContentMap[order.idPedido]);
+                            }}
+                          >
                             <QRCodeCanvas
-                              value={String(order.idPedido)}
+                              value={qrContentMap[order.idPedido]}
                               size={80}
                               bgColor="#FFFFFF"
                               fgColor="#000000"
@@ -185,7 +247,6 @@ const Orders = () => {
                             />
                           </div>
                         )}
-                        
                         <button
                           className="flex items-center gap-2 px-4 py-2 text-pink-400 hover:text-pink-500 transition-colors duration-200"
                           onClick={(e) => {
@@ -210,16 +271,65 @@ const Orders = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  <CollapsibleOrderDetails
-                    order={order}
-                    isExpanded={expandedOrder === order.idPedido}
-                  />
+                  <CollapsibleOrderDetails order={order} isExpanded={expandedOrder === order.idPedido} />
                 </div>
               ))}
             </div>
           )}
         </div>
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-light text-gray-700">Código QR</h2>
+              <button
+                onClick={closeQRModal}
+                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex justify-center">
+              <QRCodeCanvas
+                value={modalQRContent}
+                size={200}
+                bgColor="#FFFFFF"
+                fgColor="#000000"
+                level="M"
+                className="rounded-lg"
+              />
+            </div>
+            <div className="mt-4 text-center">
+              <button
+                onClick={closeQRModal}
+                className="px-4 py-2 bg-pink-300 hover:bg-pink-400 text-white font-light rounded-full transition-colors duration-200"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Temporary CollapsibleOrderDetails to avoid the warning
+const CollapsibleOrderDetails = ({ order, isExpanded }) => {
+  // Ensure no `jsx` attribute is passed incorrectly
+  return (
+    <div className={`transition-all duration-300 ${isExpanded ? 'max-h-screen' : 'max-h-0'} overflow-hidden`}>
+      <div className="p-6 bg-gray-50 border-t border-pink-100">
+        <h4 className="text-md font-light text-gray-700 mb-4">Detalles del Pedido #{order.idPedido}</h4>
+        <p className="text-sm text-gray-600">Estado: {order.estado}</p>
+        <p className="text-sm text-gray-600">Total: S./ {order.total}</p>
+        <p className="text-sm text-gray-600">Dirección: {order.direccion}</p>
+        <p className="text-sm text-gray-600">Fecha: {order.fecha_pedido}</p>
+        {/* Add more order details as needed */}
       </div>
     </div>
   );
