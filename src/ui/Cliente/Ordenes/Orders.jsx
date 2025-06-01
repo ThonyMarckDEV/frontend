@@ -11,7 +11,8 @@ import CryptoJS from 'crypto-js';
 import jwtUtils from '../../../utilities/jwtUtils';
 import OrderDetails from '../../../components/ui/Cliente/Ordenes/OrderDetails';
 import CheckOrder from '../../../components/ui/Cliente/Ordenes/CheckOrder';
-import CancelOrder from '../../../components/ui/Cliente/Ordenes/CancelOrder';
+import Swal from 'sweetalert2';
+
 import pendingPayment from '../../../img/states/pending_payment.gif';
 import approvingPayment from '../../../img/states/approving_payment.gif';
 import inPreparation from '../../../img/states/in_preparation.gif';
@@ -29,8 +30,6 @@ const Orders = () => {
   const [modalQRContent, setModalQRContent] = useState('');
   const [isCheckOrderOpen, setIsCheckOrderOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
-  const [isCancelOrderOpen, setIsCancelOrderOpen] = useState(false);
-  const [cancelOrderId, setCancelOrderId] = useState(null);
 
   const statusConfig = {
     'Pendiente de pago': { name: 'Pendiente de Pago', gif: pendingPayment, color: 'bg-amber-100 text-amber-700 border-amber-200' },
@@ -48,7 +47,7 @@ const Orders = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setOrders(data.data);
+        setOrders(data.data || []);
         setIsNetworkError(false);
         setError(null);
       } else {
@@ -101,6 +100,7 @@ const Orders = () => {
       const hash = CryptoJS.HmacSHA256(payloadString, SECRET_KEY).toString(CryptoJS.enc.Hex);
       return JSON.stringify({ payload: payloadString, hash });
     } catch (err) {
+      console.error('Error generating QR content:', err);
       return String(order.idPedido);
     }
   };
@@ -136,26 +136,52 @@ const Orders = () => {
     fetchOrders();
   };
 
-  const openCancelOrderModal = (orderId) => {
-    setCancelOrderId(orderId);
-    setIsCancelOrderOpen(true);
-  };
+  const handleCancelOrder = async (orderId) => {
+    const result = await Swal.fire({
+      title: '¿Estás seguro de cancelar tu pedido?',
+      text: `El pedido #${orderId} será cancelado y no se puede deshacer.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#f472b6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'No, mantener pedido',
+    });
 
-  const closeCancelOrderModal = () => {
-    setIsCancelOrderOpen(false);
-    setCancelOrderId(null);
-    fetchOrders();
+    if (result.isConfirmed) {
+      try {
+        const response = await fetchWithAuth(`${API_BASE_URL}/api/cancel-order`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ orderId }),
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+          toast.success('Pedido cancelado exitosamente');
+          fetchOrders();
+        } else {
+          throw new Error(data?.message || `HTTP error! Status: ${response.status}`);
+        }
+      } catch (err) {
+        console.error('Error cancelling order:', err);
+        toast.error('Error al cancelar el pedido');
+      }
+    }
   };
 
   if (loading) return <FetchWithGif />;
   if (isNetworkError) return <NetworkError />;
-  if (error)
+  if (error) {
     return (
       <div className="text-center p-8 bg-gradient-to-br from-rose-50 to-pink-50 border-2 border-rose-200 text-gray-700 rounded-3xl shadow-xl mx-auto max-w-md">
         <div className="font-medium text-lg mb-2">¡Oops!</div>
         <div className="font-light tracking-wide text-gray-600">{error}</div>
       </div>
     );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-white to-rose-50 text-gray-800">
@@ -176,7 +202,7 @@ const Orders = () => {
               <div className="max-w-sm mx-auto">
                 <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center shadow-lg">
                   <svg className="w-12 h-12 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                 </div>
                 <h2 className="text-xl font-light text-gray-600 mb-3">
@@ -186,6 +212,7 @@ const Orders = () => {
                   Explora nuestra colección para realizar tu primer pedido
                 </p>
                 <button
+                  type="button"
                   onClick={() => (window.location.href = '/products')}
                   className="px-6 py-2 bg-pink-300 hover:bg-pink-400 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
                 >
@@ -226,13 +253,13 @@ const Orders = () => {
                         <div className="space-y-2">
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-6 8h6m-9 4h12m-6 4h6" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-6 8h6m-9 4h12m-6 4h6" />
                             </svg>
                             <p className="text-sm text-gray-600">Fecha: {order.fecha_pedido}</p>
                           </div>
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                             </svg>
                             <p className="text-sm text-gray-600">
                               Total: <span className="font-semibold text-gray-700">S./ {order.total}</span>
@@ -240,8 +267,8 @@ const Orders = () => {
                           </div>
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             <p className="text-sm text-gray-600">{order.direccion}</p>
                           </div>
@@ -258,7 +285,7 @@ const Orders = () => {
                               }}
                             >
                               <QRCodeCanvas
-                                value={qrContentMap[order.idPedido]}
+                                value={qrContentMap[order.idPedido] || ''}
                                 size={80}
                                 bgColor="#FFFFFF"
                                 fgColor="#000000"
@@ -270,6 +297,7 @@ const Orders = () => {
                           {order.estado === 'Pendiente de pago' && (
                             <>
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   openCheckOrderModal(order.idPedido);
@@ -279,9 +307,10 @@ const Orders = () => {
                                 Pagar
                               </button>
                               <button
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  openCancelOrderModal(order.idPedido);
+                                  handleCancelOrder(order.idPedido);
                                 }}
                                 className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
                               >
@@ -291,6 +320,7 @@ const Orders = () => {
                           )}
                         </div>
                         <button
+                          type="button"
                           className="flex items-center gap-2 px-4 py-2 text-pink-400 hover:text-pink-500 transition-colors duration-200"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -308,7 +338,7 @@ const Orders = () => {
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                           >
-                            <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
                       </div>
@@ -327,17 +357,18 @@ const Orders = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-light text-gray-700">Código QR</h2>
               <button
+                type="button"
                 onClick={closeQRModal}
                 className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
             <div className="flex justify-center">
               <QRCodeCanvas
-                value={modalQRContent}
+                value={modalQRContent || ''}
                 size={200}
                 bgColor="#FFFFFF"
                 fgColor="#000000"
@@ -347,6 +378,7 @@ const Orders = () => {
             </div>
             <div className="mt-4 text-center">
               <button
+                type="button"
                 onClick={closeQRModal}
                 className="px-4 py-2 bg-pink-300 hover:bg-pink-400 text-white font-light rounded-full transition-colors duration-200"
               >
@@ -359,15 +391,8 @@ const Orders = () => {
       {isCheckOrderOpen && (
         <CheckOrder
           orderId={selectedOrderId}
-          order={orders.find((o) => o.idPedido === selectedOrderId)}
+          order={orders.find((o) => o.idPedido === selectedOrderId) || {}}
           onClose={closeCheckOrderModal}
-          onOrderCancelled={fetchOrders}
-        />
-      )}
-      {isCancelOrderOpen && (
-        <CancelOrder
-          orderId={cancelOrderId}
-          onClose={closeCancelOrderModal}
           onOrderCancelled={fetchOrders}
         />
       )}
