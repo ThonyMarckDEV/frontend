@@ -5,7 +5,7 @@ import API_BASE_URL from '../../../../js/urlHelper';
 import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
 
-const CancelOrder = ({ orderId, onClose }) => {
+const CancelOrder = ({ orderId, onClose, onOrderCancelled }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCancelOrder = async () => {
@@ -34,6 +34,7 @@ const CancelOrder = ({ orderId, onClose }) => {
         const data = await response.json();
         if (response.ok && data.success) {
           toast.success('Pedido cancelado exitosamente');
+          onOrderCancelled(); // Refresh orders
           setTimeout(() => {
             onClose();
           }, 300);
@@ -63,7 +64,6 @@ const CancelOrder = ({ orderId, onClose }) => {
         className="bg-white rounded-3xl max-w-md w-full mx-4 shadow-2xl border border-pink-100 max-sm:h-full max-sm:rounded-none max-sm:m-0"
       >
         <div className="flex flex-col h-full max-sm:h-full">
-          {/* Header */}
           <div className="sticky top-0 z-10 bg-gradient-to-r from-pink-50 to-rose-50 rounded-t-3xl pt-6 px-6 max-sm:border-b max-sm:border-pink-100">
             <div className="flex justify-between items-center mb-4">
               <div className="text-center flex-1">
@@ -90,15 +90,11 @@ const CancelOrder = ({ orderId, onClose }) => {
               </motion.button>
             </div>
           </div>
-
-          {/* Content */}
           <div className="flex-1 px-6 py-4">
             <p className="text-sm text-gray-600 text-center">
               ¿Estás seguro de cancelar el pedido #{orderId}? Esta acción marcará el pedido como cancelado y no se puede deshacer.
             </p>
           </div>
-
-          {/* Buttons */}
           <div className="sticky bottom-0 z-10 bg-white rounded-b-3xl pt-4 pb-6 px-6 max-sm:border-t max-sm:border-pink-100">
             <div className="flex justify-center gap-4">
               <motion.button

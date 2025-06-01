@@ -11,8 +11,7 @@ import CryptoJS from 'crypto-js';
 import jwtUtils from '../../../utilities/jwtUtils';
 import OrderDetails from '../../../components/ui/Cliente/Ordenes/OrderDetails';
 import CheckOrder from '../../../components/ui/Cliente/Ordenes/CheckOrder';
-
-// Import status GIFs
+import CancelOrder from '../../../components/ui/Cliente/Ordenes/CancelOrder';
 import pendingPayment from '../../../img/states/pending_payment.gif';
 import approvingPayment from '../../../img/states/approving_payment.gif';
 import inPreparation from '../../../img/states/in_preparation.gif';
@@ -30,8 +29,9 @@ const Orders = () => {
   const [modalQRContent, setModalQRContent] = useState('');
   const [isCheckOrderOpen, setIsCheckOrderOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [isCancelOrderOpen, setIsCancelOrderOpen] = useState(false);
+  const [cancelOrderId, setCancelOrderId] = useState(null);
 
-  // Map status strings to names, GIFs, and colors
   const statusConfig = {
     'Pendiente de pago': { name: 'Pendiente de Pago', gif: pendingPayment, color: 'bg-amber-100 text-amber-700 border-amber-200' },
     'Aprobando pago': { name: 'Aprobando Pago', gif: approvingPayment, color: 'bg-blue-100 text-blue-700 border-blue-200' },
@@ -85,7 +85,6 @@ const Orders = () => {
     }
   }, []);
 
-  // Generate secure QR code content
   const generateSecureQRContent = (order) => {
     if (!SECRET_KEY) {
       return String(order.idPedido);
@@ -102,11 +101,10 @@ const Orders = () => {
       const hash = CryptoJS.HmacSHA256(payloadString, SECRET_KEY).toString(CryptoJS.enc.Hex);
       return JSON.stringify({ payload: payloadString, hash });
     } catch (err) {
-      return String(order.idPedido); // Fallback
+      return String(order.idPedido);
     }
   };
 
-  // Memoize QR content for each order
   const qrContentMap = useMemo(() => {
     const map = {};
     orders.forEach((order) => {
@@ -135,28 +133,18 @@ const Orders = () => {
   const closeCheckOrderModal = () => {
     setIsCheckOrderOpen(false);
     setSelectedOrderId(null);
-    fetchOrders(); // Refresh orders after submission
+    fetchOrders();
   };
 
-  const handleCancelOrder = async (orderId) => {
-    try {
-      const response = await fetchWithAuth(`${API_BASE_URL}/api/cancel-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId }),
-      });
+  const openCancelOrderModal = (orderId) => {
+    setCancelOrderId(orderId);
+    setIsCancelOrderOpen(true);
+  };
 
-      const data = await response.json();
-      if (response.ok && data.success) {
-        toast.success('Pedido cancelado exitosamente');
-        fetchOrders(); // Refresh orders list
-      } else {
-        toast.error(data?.message || 'Error al cancelar el pedido');
-      }
-    } catch (err) {
-      console.error('Error cancelling order:', err);
-      toast.error('Error al cancelar el pedido');
-    }
+  const closeCancelOrderModal = () => {
+    setIsCancelOrderOpen(false);
+    setCancelOrderId(null);
+    fetchOrders();
   };
 
   if (loading) return <FetchWithGif />;
@@ -181,7 +169,6 @@ const Orders = () => {
           </div>
         </div>
       </div>
-
       <div className="flex-grow py-8 sm:py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           {orders.length === 0 ? (
@@ -189,7 +176,7 @@ const Orders = () => {
               <div className="max-w-sm mx-auto">
                 <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center shadow-lg">
                   <svg className="w-12 h-12 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                 </div>
                 <h2 className="text-xl font-light text-gray-600 mb-3">
@@ -227,7 +214,6 @@ const Orders = () => {
                       {statusConfig[order.estado]?.name || 'Estado desconocido'}
                     </span>
                   </div>
-
                   <div
                     className="p-6 pt-20 cursor-pointer hover:bg-pink-50 transition-colors duration-200"
                     onClick={() => toggleOrderDetails(order.idPedido)}
@@ -240,13 +226,13 @@ const Orders = () => {
                         <div className="space-y-2">
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-6 8h6m-9 4h12m-6 4h6" />
+                              <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-6 8h6m-9 4h12m-6 4h6" />
                             </svg>
                             <p className="text-sm text-gray-600">Fecha: {order.fecha_pedido}</p>
                           </div>
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                              <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                             </svg>
                             <p className="text-sm text-gray-600">
                               Total: <span className="font-semibold text-gray-700">S./ {order.total}</span>
@@ -254,8 +240,8 @@ const Orders = () => {
                           </div>
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             <p className="text-sm text-gray-600">{order.direccion}</p>
                           </div>
@@ -295,7 +281,7 @@ const Orders = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleCancelOrder(order.idPedido);
+                                  openCancelOrderModal(order.idPedido);
                                 }}
                                 className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
                               >
@@ -322,7 +308,7 @@ const Orders = () => {
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
                       </div>
@@ -335,7 +321,6 @@ const Orders = () => {
           )}
         </div>
       </div>
-
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
@@ -346,7 +331,7 @@ const Orders = () => {
                 className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <path strokeCap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
@@ -371,12 +356,19 @@ const Orders = () => {
           </div>
         </div>
       )}
-
       {isCheckOrderOpen && (
-        <CheckOrder 
-        orderId={selectedOrderId} 
-        order={orders.find((o) => o.idPedido === selectedOrderId)}
-        onClose={closeCheckOrderModal} 
+        <CheckOrder
+          orderId={selectedOrderId}
+          order={orders.find((o) => o.idPedido === selectedOrderId)}
+          onClose={closeCheckOrderModal}
+          onOrderCancelled={fetchOrders}
+        />
+      )}
+      {isCancelOrderOpen && (
+        <CancelOrder
+          orderId={cancelOrderId}
+          onClose={closeCancelOrderModal}
+          onOrderCancelled={fetchOrders}
         />
       )}
     </div>
