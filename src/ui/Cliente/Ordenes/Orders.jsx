@@ -373,7 +373,11 @@ const Orders = () => {
       )}
 
       {isCheckOrderOpen && (
-        <CheckOrder orderId={selectedOrderId} onClose={closeCheckOrderModal} />
+        <CheckOrder 
+        orderId={selectedOrderId} 
+        order={orders.find((o) => o.idPedido === selectedOrderId)}
+        onClose={closeCheckOrderModal} 
+        />
       )}
     </div>
   );
