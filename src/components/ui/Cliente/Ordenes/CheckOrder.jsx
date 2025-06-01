@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import yapeQR from '../../../../img/payment/ThonyMarckQR.jpg';
 
 const CheckOrder = ({ orderId, order, onClose }) => {
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Depósito Bancario'); // Set default to Depósito Bancario
   const [receiptFile, setReceiptFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,7 +88,7 @@ const CheckOrder = ({ orderId, order, onClose }) => {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         className="bg-white rounded-3xl max-w-4xl w-full mx-4 shadow-2xl border border-pink-100 max-sm:h-full max-sm:rounded-none max-sm:m-0"
-      >
+    >
         <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col h-full max-sm:h-full">
           {/* Enhanced Header */}
           <div className="sticky top-0 z-10 bg-gradient-to-r from-pink-50 to-rose-50 rounded-t-3xl pt-8 px-8 max-sm:border-b max-sm:border-pink-100">
