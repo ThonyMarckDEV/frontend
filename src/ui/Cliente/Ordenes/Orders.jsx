@@ -10,7 +10,7 @@ import noProductImage from '../../../img/utilidades/noproduct.webp';
 import CryptoJS from 'crypto-js';
 import jwtUtils from '../../../utilities/jwtUtils';
 import OrderDetails from '../../../components/ui/Cliente/Ordenes/OrderDetails';
-import CheckOrder from '../../../components/ui/Cliente/Ordenes/CheckOrder'; // Import CheckOrder
+import CheckOrder from '../../../components/ui/Cliente/Ordenes/CheckOrder';
 
 // Import status GIFs
 import pendingPayment from '../../../img/states/pending_payment.gif';
@@ -28,8 +28,8 @@ const Orders = () => {
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalQRContent, setModalQRContent] = useState('');
-  const [isCheckOrderOpen, setIsCheckOrderOpen] = useState(false); // State for CheckOrder modal
-  const [selectedOrderId, setSelectedOrderId] = useState(null); // Track selected order for payment
+  const [isCheckOrderOpen, setIsCheckOrderOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
 
   // Map status strings to names, GIFs, and colors
   const statusConfig = {
@@ -138,6 +138,27 @@ const Orders = () => {
     fetchOrders(); // Refresh orders after submission
   };
 
+  const handleCancelOrder = async (orderId) => {
+    try {
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/cancel-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        toast.success('Pedido cancelado exitosamente');
+        fetchOrders(); // Refresh orders list
+      } else {
+        toast.error(data?.message || 'Error al cancelar el pedido');
+      }
+    } catch (err) {
+      console.error('Error cancelling order:', err);
+      toast.error('Error al cancelar el pedido');
+    }
+  };
+
   if (loading) return <FetchWithGif />;
   if (isNetworkError) return <NetworkError />;
   if (error)
@@ -179,7 +200,7 @@ const Orders = () => {
                 </p>
                 <button
                   onClick={() => (window.location.href = '/products')}
-                  className="px-6 py-3 bg-pink-300 hover:bg-pink-400 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+                  className="px-6 py-2 bg-pink-300 hover:bg-pink-400 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
                 >
                   Explorar Colección
                 </button>
@@ -241,7 +262,7 @@ const Orders = () => {
                         </div>
                       </div>
                       <div className="flex justify-between items-center pt-4 border-t border-pink-100">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
                           {order.recojo_local === 1 && (
                             <div
                               className="bg-pink-50 p-3 rounded-xl cursor-pointer hover:bg-pink-100 transition-colors duration-200"
@@ -261,15 +282,26 @@ const Orders = () => {
                             </div>
                           )}
                           {order.estado === 'Pendiente de pago' && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openCheckOrderModal(order.idPedido);
-                              }}
-                              className="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
-                            >
-                              Pagar
-                            </button>
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openCheckOrderModal(order.idPedido);
+                                }}
+                                className="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+                              >
+                                Pagar
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCancelOrder(order.idPedido);
+                                }}
+                                className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+                              >
+                                Cancelar
+                              </button>
+                            </>
                           )}
                         </div>
                         <button

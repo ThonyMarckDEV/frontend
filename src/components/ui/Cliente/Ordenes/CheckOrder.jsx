@@ -12,6 +12,7 @@ const CheckOrder = ({ orderId, onClose }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
+  const formRef = useRef(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -36,6 +37,12 @@ const CheckOrder = ({ orderId, onClose }) => {
       return;
     }
 
+    // Ensure form is still mounted
+    if (!formRef.current) {
+      console.warn('Form is not connected to the DOM');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const formData = new FormData();
@@ -51,7 +58,10 @@ const CheckOrder = ({ orderId, onClose }) => {
       const data = await response.json();
       if (response.ok && data.success) {
         toast.success('Comprobante enviado exitosamente');
-        onClose();
+        // Delay onClose to ensure form submission completes
+        setTimeout(() => {
+          onClose();
+        }, 300);
       } else {
         toast.error(data?.message || 'Error al enviar el comprobante');
       }
@@ -76,7 +86,7 @@ const CheckOrder = ({ orderId, onClose }) => {
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         className="bg-white rounded-3xl max-w-md w-full mx-4 shadow-2xl border border-pink-100 max-sm:h-full max-sm:rounded-none max-sm:m-0"
       >
-        <form onSubmit={handleSubmit} className="flex flex-col h-full max-sm:h-full">
+        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col h-full max-sm:h-full">
           {/* Fixed Header */}
           <div className="sticky top-0 z-10 bg-white rounded-t-3xl pt-8 px-8 max-sm:border-b max-sm:border-pink-100">
             <div className="flex justify-between items-center mb-6">
@@ -88,6 +98,7 @@ const CheckOrder = ({ orderId, onClose }) => {
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
                 className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                type="button" // Prevent form submission on close
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -128,7 +139,7 @@ const CheckOrder = ({ orderId, onClose }) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700"
+              className="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 max-sm:text-xs max-sm:p-3"
             >
               <p className="font-medium">
                 Advertencia: Si se adjuntan capturas de comprobantes modificados y/o alterados, se procederá a cancelar su pedido y/o enfrentar problemas legales. Por favor, evite problemas. Recuerde que un administrador verificará su pago antes de proceder con su pedido.
