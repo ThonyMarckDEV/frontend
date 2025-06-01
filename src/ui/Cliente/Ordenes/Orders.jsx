@@ -9,6 +9,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import noProductImage from '../../../img/utilidades/noproduct.webp';
 import CryptoJS from 'crypto-js';
 import jwtUtils from '../../../utilities/jwtUtils';
+import OrderDetails from '../../../components/ui/Cliente/Ordenes/OrderDetails';
 
 // Import status GIFs
 import pendingPayment from '../../../img/states/pending_payment.gif';
@@ -84,7 +85,6 @@ const Orders = () => {
   // Generate secure QR code content
   const generateSecureQRContent = (order) => {
     if (!SECRET_KEY) {
-     // console.error('SECRET_KEY is not defined. Please set REACT_APP_QR_SECRET_KEY in .env');
       return String(order.idPedido);
     }
 
@@ -99,7 +99,6 @@ const Orders = () => {
       const hash = CryptoJS.HmacSHA256(payloadString, SECRET_KEY).toString(CryptoJS.enc.Hex);
       return JSON.stringify({ payload: payloadString, hash });
     } catch (err) {
-    //  console.error('Error generating HMAC:', err);
       return String(order.idPedido); // Fallback
     }
   };
@@ -123,6 +122,13 @@ const Orders = () => {
   const closeQRModal = () => {
     setIsModalOpen(false);
     setModalQRContent('');
+  };
+
+  // Handle payment button click
+  const handlePayment = (orderId) => {
+    // Replace with your actual payment flow logic
+    toast.info(`Iniciando proceso de pago para el pedido #${orderId}`);
+    // Example: window.location.href = `/payment/${orderId}`;
   };
 
   if (loading) return <FetchWithGif />;
@@ -206,7 +212,7 @@ const Orders = () => {
                         <div className="space-y-2">
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-6 8h6m-9 4h12m-6 4h6" />
+                              <path strokeLinecap="round" strokeParticip="round" strokeWidth="2" d="M8 7V3m8 4V3m-6 8h6m-9 4h12m-6 4h6" />
                             </svg>
                             <p className="text-sm text-gray-600">Fecha: {order.fecha_pedido}</p>
                           </div>
@@ -228,24 +234,37 @@ const Orders = () => {
                         </div>
                       </div>
                       <div className="flex justify-between items-center pt-4 border-t border-pink-100">
-                        {order.recojo_local === 1 && (
-                          <div
-                            className="bg-pink-50 p-3 rounded-xl cursor-pointer hover:bg-pink-100 transition-colors duration-200"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openQRModal(qrContentMap[order.idPedido]);
-                            }}
-                          >
-                            <QRCodeCanvas
-                              value={qrContentMap[order.idPedido]}
-                              size={80}
-                              bgColor="#FFFFFF"
-                              fgColor="#000000"
-                              level="M"
-                              className="rounded-lg"
-                            />
-                          </div>
-                        )}
+                        <div className="flex items-center gap-4">
+                          {order.recojo_local === 1 && (
+                            <div
+                              className="bg-pink-50 p-3 rounded-xl cursor-pointer hover:bg-pink-100 transition-colors duration-200"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openQRModal(qrContentMap[order.idPedido]);
+                              }}
+                            >
+                              <QRCodeCanvas
+                                value={qrContentMap[order.idPedido]}
+                                size={80}
+                                bgColor="#FFFFFF"
+                                fgColor="#000000"
+                                level="M"
+                                className="rounded-lg"
+                              />
+                            </div>
+                          )}
+                          {order.estado === 'Pendiente de pago' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePayment(order.idPedido);
+                              }}
+                              className="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+                            >
+                              Pagar
+                            </button>
+                          )}
+                        </div>
                         <button
                           className="flex items-center gap-2 px-4 py-2 text-pink-400 hover:text-pink-500 transition-colors duration-200"
                           onClick={(e) => {
@@ -270,7 +289,7 @@ const Orders = () => {
                       </div>
                     </div>
                   </div>
-                  <CollapsibleOrderDetails order={order} isExpanded={expandedOrder === order.idPedido} />
+                  <OrderDetails order={order} isExpanded={expandedOrder === order.idPedido} />
                 </div>
               ))}
             </div>
@@ -313,23 +332,6 @@ const Orders = () => {
           </div>
         </div>
       )}
-    </div>
-  );
-};
-
-// Temporary CollapsibleOrderDetails to avoid the warning
-const CollapsibleOrderDetails = ({ order, isExpanded }) => {
-  // Ensure no `jsx` attribute is passed incorrectly
-  return (
-    <div className={`transition-all duration-300 ${isExpanded ? 'max-h-screen' : 'max-h-0'} overflow-hidden`}>
-      <div className="p-6 bg-gray-50 border-t border-pink-100">
-        <h4 className="text-md font-light text-gray-700 mb-4">Detalles del Pedido #{order.idPedido}</h4>
-        <p className="text-sm text-gray-600">Estado: {order.estado}</p>
-        <p className="text-sm text-gray-600">Total: S./ {order.total}</p>
-        <p className="text-sm text-gray-600">Dirección: {order.direccion}</p>
-        <p className="text-sm text-gray-600">Fecha: {order.fecha_pedido}</p>
-        {/* Add more order details as needed */}
-      </div>
     </div>
   );
 };
