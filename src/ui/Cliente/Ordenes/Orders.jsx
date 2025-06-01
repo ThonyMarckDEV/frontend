@@ -10,6 +10,7 @@ import noProductImage from '../../../img/utilidades/noproduct.webp';
 import CryptoJS from 'crypto-js';
 import jwtUtils from '../../../utilities/jwtUtils';
 import OrderDetails from '../../../components/ui/Cliente/Ordenes/OrderDetails';
+import CheckOrder from '../../../components/ui/Cliente/Ordenes/CheckOrder'; // Import CheckOrder
 
 // Import status GIFs
 import pendingPayment from '../../../img/states/pending_payment.gif';
@@ -27,6 +28,8 @@ const Orders = () => {
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalQRContent, setModalQRContent] = useState('');
+  const [isCheckOrderOpen, setIsCheckOrderOpen] = useState(false); // State for CheckOrder modal
+  const [selectedOrderId, setSelectedOrderId] = useState(null); // Track selected order for payment
 
   // Map status strings to names, GIFs, and colors
   const statusConfig = {
@@ -124,11 +127,15 @@ const Orders = () => {
     setModalQRContent('');
   };
 
-  // Handle payment button click
-  const handlePayment = (orderId) => {
-    // Replace with your actual payment flow logic
-    toast.info(`Iniciando proceso de pago para el pedido #${orderId}`);
-    // Example: window.location.href = `/payment/${orderId}`;
+  const openCheckOrderModal = (orderId) => {
+    setSelectedOrderId(orderId);
+    setIsCheckOrderOpen(true);
+  };
+
+  const closeCheckOrderModal = () => {
+    setIsCheckOrderOpen(false);
+    setSelectedOrderId(null);
+    fetchOrders(); // Refresh orders after submission
   };
 
   if (loading) return <FetchWithGif />;
@@ -212,7 +219,7 @@ const Orders = () => {
                         <div className="space-y-2">
                           <div className="flex items-center gap-3">
                             <svg className="w-5 h-5 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeParticip="round" strokeWidth="2" d="M8 7V3m8 4V3m-6 8h6m-9 4h12m-6 4h6" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-6 8h6m-9 4h12m-6 4h6" />
                             </svg>
                             <p className="text-sm text-gray-600">Fecha: {order.fecha_pedido}</p>
                           </div>
@@ -257,7 +264,7 @@ const Orders = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handlePayment(order.idPedido);
+                                openCheckOrderModal(order.idPedido);
                               }}
                               className="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
                             >
@@ -331,6 +338,10 @@ const Orders = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {isCheckOrderOpen && (
+        <CheckOrder orderId={selectedOrderId} onClose={closeCheckOrderModal} />
       )}
     </div>
   );
