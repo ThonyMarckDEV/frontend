@@ -12,6 +12,7 @@ const Categories = () => {
   const [newCategory, setNewCategory] = useState({ name: '', image: null });
   const [editingCategory, setEditingCategory] = useState(null);
   const [editName, setEditName] = useState('');
+  const [editImage, setEditImage] = useState(null);
 
   useEffect(() => {
     fetchCategories();
@@ -70,12 +71,15 @@ const Categories = () => {
   const handleEditCategory = async (idCategoria) => {
     setLoadingScreen(true);
     try {
+      const formData = new FormData();
+      formData.append('nombreCategoria', editName);
+      if (editImage) {
+        formData.append('imagen', editImage);
+      }
+
       const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/${idCategoria}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nombreCategoria: editName }),
+        body: formData,
       });
 
       const data = await response.json();
@@ -86,6 +90,7 @@ const Categories = () => {
       toast.success('Category updated successfully');
       setEditingCategory(null);
       setEditName('');
+      setEditImage(null);
       fetchCategories();
     } catch (error) {
       toast.error('Error updating category');
@@ -119,6 +124,10 @@ const Categories = () => {
     } finally {
       setLoadingScreen(false);
     }
+  };
+
+  const isUrl = (string) => {
+    return string.startsWith('http://') || string.startsWith('https://');
   };
 
   return (
@@ -196,10 +205,16 @@ const Categories = () => {
                     )}
                   </td>
                   <td className="px-4 py-2">
-                    {category.imagen ? (
+                    {editingCategory === category.idCategoria ? (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setEditImage(e.target.files[0])}
+                        className="w-full p-1 border border-gray-300 rounded-md"
+                      />
+                    ) : category.imagen ? (
                       <img
-                        // src={`${API_BASE_URL}/storage/${category.imagen}`}
-                        src={`${category.imagen}`}
+                        src={isUrl(category.imagen) ? category.imagen : `${API_BASE_URL}/storage/${category.imagen}`}
                         alt={category.nombreCategoria}
                         className="h-12 w-12 object-cover rounded"
                       />
@@ -230,7 +245,10 @@ const Categories = () => {
                           Save
                         </button>
                         <button
-                          onClick={() => setEditingCategory(null)}
+                          onClick={() => {
+                            setEditingCategory(null);
+                            setEditImage(null);
+                          }}
                           className="text-gray-500 hover:text-gray-600"
                         >
                           Cancel
@@ -241,6 +259,7 @@ const Categories = () => {
                         onClick={() => {
                           setEditingCategory(category.idCategoria);
                           setEditName(category.nombreCategoria);
+                          setEditImage(null);
                         }}
                         className="text-pink-500 hover:text-pink-600"
                       >
