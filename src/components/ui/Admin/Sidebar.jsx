@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, Package, LogOut } from 'lucide-react';
-import jwtUtils from '../../../utilities/jwtUtils';
+import { logout } from '../../../js/logout';
 
 const Sidebar = () => {
 
@@ -10,11 +10,6 @@ const Sidebar = () => {
     { to: '/admin/users', icon: Users, label: 'Usuarios' },
     { to: '/admin/products', icon: Package, label: 'Productos' },
   ];
-
-  const handleLogout = () => {
-    jwtUtils.removeTokensFromCookie( );
-    window.location.href = '/';
-  };
 
   return (
     <div className="fixed top-0 left-0 h-screen w-64 bg-white shadow-lg">
@@ -42,7 +37,7 @@ const Sidebar = () => {
       </nav>
       <div className="absolute bottom-0 w-full p-6">
         <button
-          onClick={handleLogout}
+          onClick={logout}
           className="flex items-center w-full px-6 py-3 text-gray-600 hover:bg-pink-50 hover:text-pink-500 transition-colors"
         >
           <LogOut className="h-5 w-5 mr-3" />
