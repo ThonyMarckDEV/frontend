@@ -105,7 +105,7 @@ const CartSummary = ({ cartDetails, calculateTotal, pendingUpdates, isOpen, togg
                   disabled={isPending || (pickupMethod === 'delivery' && !selectedAddress)}
                   className="w-full py-3 bg-pink-300 hover:bg-pink-400 text-white font-light tracking-[0.15em] uppercase text-xs sm:text-sm rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                 >
-                  {isPending ? 'Procesando...' : 'Finalizar Compra'}
+                  {isPending ? 'Procesando...' : 'Realizar Pedido'}
                 </button>
               </div>
             </div>
