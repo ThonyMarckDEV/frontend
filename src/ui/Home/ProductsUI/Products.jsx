@@ -1,21 +1,22 @@
-// src/components/Home/ProductsUIComponents/ProductsUI.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProductCard from '../../../components/Home/ProductsUIComponents/ProductCard';
 import API_BASE_URL from '../../../js/urlHelper';
 import Footer from '../../../components/Home/Footer';
 import FetchWithGif from '../../../components/Reutilizables/FetchWithGif';
-import NetworkError from '../../../components/Reutilizables/NetworkError'; // Import NetworkError
+import NetworkError from '../../../components/Reutilizables/NetworkError';
+import Pagination from '../../../components/Reutilizables/Pagination'; // Import the reusable Pagination component
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import noProductsImage from '../../../img/utilidades/noproduct.png';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [lastPage, setLastPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0); // New state for total items
+  const [itemsPerPage] = useState(9); // Adjust based on backend (e.g., 9 products per page)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isNetworkError, setIsNetworkError] = useState(false); // New state for network errors
+  const [isNetworkError, setIsNetworkError] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -119,7 +120,7 @@ const Products = () => {
       if (response.data.success) {
         setProducts(response.data.data.data);
         setCurrentPage(response.data.data.current_page);
-        setLastPage(response.data.data.last_page);
+        setTotalItems(response.data.data.total); // Update totalItems from backend
         setIsNetworkError(false);
       } else {
         setError('No se pudieron cargar los productos');
@@ -213,14 +214,14 @@ const Products = () => {
 
   // Handle page change
   const handlePageChange = (page) => {
-    if (page >= 1 && page <= lastPage) {
+    if (page >= 1 && page <= Math.ceil(totalItems / itemsPerPage)) {
       setCurrentPage(page);
     }
   };
 
   if (loading) return <FetchWithGif />;
-  if (isNetworkError) return <NetworkError />; // Use NetworkError component
-  if (error) return <div className="text-center text-red-600">{error}</div>; // Fallback for other errors
+  if (isNetworkError) return <NetworkError />;
+  if (error) return <div className="text-center text-red-600">{error}</div>;
 
   return (
     <div className="flex flex-col min-h-screen bg-pink-50">
@@ -266,35 +267,12 @@ const Products = () => {
           )}
 
           {products.length > 0 && (
-            <div className="flex justify-center mt-8 space-x-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-4 py-2 bg-pink-200 text-pink-800 rounded disabled:opacity-50 hover:bg-pink-300 transition"
-              >
-                Anterior
-              </button>
-              {[...Array(lastPage).keys()].map((page) => (
-                <button
-                  key={page + 1}
-                  onClick={() => handlePageChange(page + 1)}
-                  className={`px-4 py-2 rounded ${
-                    currentPage === page + 1
-                      ? 'bg-pink-600 text-white'
-                      : 'bg-pink-200 text-pink-800 hover:bg-pink-300'
-                  } transition`}
-                >
-                  {page + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === lastPage}
-                className="px-4 py-2 bg-pink-200 text-pink-800 rounded disabled:opacity-50 hover:bg-pink-300 transition"
-              >
-                Siguiente
-              </button>
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+            />
           )}
         </div>
 

@@ -4,6 +4,7 @@ import axios from 'axios';
 import API_BASE_URL from '../../js/urlHelper';
 import LoadingScreen from '../../components/LoadingScreen';
 import NetworkError from '../../components/Reutilizables/NetworkError';
+import Pagination from '../../components/Reutilizables/Pagination';
 
 const Categories = ({ isVisible }) => {
   const [categories, setCategories] = useState([]);
@@ -13,7 +14,7 @@ const Categories = ({ isVisible }) => {
   const [error, setError] = useState(null);
   const [isNetworkError, setIsNetworkError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const categoriesPerPage = 4;
+  const categoriesPerPage = 4; // Number of categories per page
   const navigate = useNavigate();
 
   // Fetch categories on mount
@@ -92,26 +93,9 @@ const Categories = ({ isVisible }) => {
   };
 
   // Pagination logic
-  const totalPages = Math.ceil(categories.length / categoriesPerPage);
   const indexOfLastCategory = currentPage * categoriesPerPage;
   const indexOfFirstCategory = indexOfLastCategory - categoriesPerPage;
   const currentCategories = categories.slice(indexOfFirstCategory, indexOfLastCategory);
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
 
   // Determine the number of skeleton loaders
   const skeletonCount = categories.length > 0 ? Math.min(categories.length, categoriesPerPage) : 4;
@@ -210,39 +194,12 @@ const Categories = ({ isVisible }) => {
 
           {/* Pagination */}
           {categories.length > categoriesPerPage && (
-            <div className="flex justify-center mt-8 space-x-2">
-              <button
-                onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 text-gray-800 hover:text-pink-300 transition rounded-lg ${
-                  currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                ← Anterior
-              </button>
-              {[...Array(totalPages)].map((_, index) => (
-                <button
-                  key={index + 1}
-                  onClick={() => handlePageChange(index + 1)}
-                  className={`px-4 py-2 rounded-lg ${
-                    currentPage === index + 1
-                      ? 'bg-pink-300 text-white'
-                      : 'text-gray-800 hover:text-pink-300 transition'
-                  }`}
-                >
-                  {index + 1}
-                </button>
-              ))}
-              <button
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                className={`px-4 py-2 text-gray-800 hover:text-pink-300 transition rounded-lg ${
-                  currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                Siguiente →
-              </button>
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalItems={categories.length}
+              itemsPerPage={categoriesPerPage}
+              onPageChange={setCurrentPage}
+            />
           )}
         </div>
       </div>
