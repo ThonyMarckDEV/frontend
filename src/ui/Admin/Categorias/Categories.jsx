@@ -9,10 +9,12 @@ const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingScreen, setLoadingScreen] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', image: null });
-  const [editingCategory, setEditingCategory] = useState(null); // For name editing
-  const [editingImageCategory, setEditingImageCategory] = useState(null); // For image editing
+  const [newCategory, setNewCategory] = useState({ name: '', image: null, imageUrl: '', useImageUrl: false });
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editingImageCategory, setEditingImageCategory] = useState(null);
   const [editName, setEditName] = useState('');
+  const [editImageUrl, setEditImageUrl] = useState('');
+  const [useEditImageUrl, setUseEditImageUrl] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -26,10 +28,7 @@ const Categories = () => {
         method: 'GET',
       });
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Error fetching categories');
-      }
-      console.log('Fetched categories:', data.data);
+      if (!response.ok) throw new Error(data.message || 'Error fetching categories');
       setCategories(data.data);
     } catch (error) {
       toast.error('Error fetching categories');
@@ -45,7 +44,14 @@ const Categories = () => {
     try {
       const formData = new FormData();
       formData.append('nombreCategoria', newCategory.name);
-      if (newCategory.image) {
+      formData.append('useImageUrl', newCategory.useImageUrl);
+      if (newCategory.useImageUrl) {
+        if (!newCategory.imageUrl.trim()) {
+          toast.error('Image URL cannot be empty');
+          return;
+        }
+        formData.append('imageUrl', newCategory.imageUrl);
+      } else if (newCategory.image) {
         formData.append('imagen', newCategory.image);
       }
 
@@ -55,12 +61,10 @@ const Categories = () => {
       });
 
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Error adding category');
-      }
+      if (!response.ok) throw new Error(data.message || 'Error adding category');
 
       toast.success('Category added successfully');
-      setNewCategory({ name: '', image: null });
+      setNewCategory({ name: '', image: null, imageUrl: '', useImageUrl: false });
       const fileInput = document.getElementById('categoryImage');
       if (fileInput) fileInput.value = '';
       fetchCategories();
@@ -82,16 +86,12 @@ const Categories = () => {
 
       const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/${idCategoria}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombreCategoria: editName.trim() }),
       });
 
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Error updating category name');
-      }
+      if (!response.ok) throw new Error(data.message || 'Error updating category name');
 
       toast.success('Category name updated successfully');
       setEditingCategory(null);
@@ -105,58 +105,47 @@ const Categories = () => {
     }
   };
 
-  const handleImageClick = (idCategoria) => {
-    setEditingImageCategory(idCategoria); // Set image editing state
-    fileInputRef.current.click();
+  const startEditingImage = (category) => {
+    setEditingImageCategory(category.idCategoria);
+    setEditImageUrl(category.imagen || '');
+    setUseEditImageUrl(category.imagen && isUrl(category.imagen));
   };
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file && !useEditImageUrl) return;
 
     setLoadingScreen(true);
     try {
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/gif'];
-      if (!validTypes.includes(file.type)) {
-        toast.error('Invalid image format. Use JPEG, JPG, or GIF.');
-        return;
-      }
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error('Image size must be under 2MB.');
-        return;
-      }
-
-      console.log('Selected image:', {
-        name: file.name,
-        type: file.type,
-        size: file.size / 1024 + 'KB',
-      });
-
       const formData = new FormData();
-      formData.append('fileImage', file);
-      // Add method spoofing for PUT request
+      formData.append('useImageUrl', useEditImageUrl);
+      if (useEditImageUrl) {
+        if (!editImageUrl.trim()) {
+          toast.error('Image URL cannot be empty');
+          return;
+        }
+        formData.append('imageUrl', editImageUrl.trim());
+      } else {
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+          toast.error('Invalid image format. Use JPEG, JPG, or GIF.');
+          return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+          toast.error('Image size must be under 2MB.');
+          return;
+        }
+        formData.append('fileImage', file);
+      }
       formData.append('_method', 'PUT');
 
-      const formDataEntries = [];
-      for (let [key, value] of formData.entries()) {
-        formDataEntries.push({
-          key,
-          value: value instanceof File ? `${value.name} (${value.type}, ${value.size} bytes)` : value,
-        });
-      }
-      console.log('FormData contents:', formDataEntries);
-
-      // Change method to POST but use _method field for PUT
       const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/${editingImageCategory}/image`, {
-        method: 'POST', // Changed from PUT to POST
+        method: 'POST',
         body: formData,
-        // Don't set Content-Type header - let the browser set it with boundary
       });
 
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Error updating category image');
-      }
+      if (!response.ok) throw new Error(data.message || 'Error updating category image');
 
       toast.success('Category image updated successfully');
       fetchCategories();
@@ -166,6 +155,8 @@ const Categories = () => {
     } finally {
       setLoadingScreen(false);
       setEditingImageCategory(null);
+      setEditImageUrl('');
+      setUseEditImageUrl(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -175,16 +166,12 @@ const Categories = () => {
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/${idCategoria}/status`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !currentStatus }),
       });
 
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Error toggling status');
-      }
+      if (!response.ok) throw new Error(data.message || 'Error toggling status');
 
       toast.success('Category status updated');
       fetchCategories();
@@ -204,6 +191,13 @@ const Categories = () => {
   const cancelEditing = () => {
     setEditingCategory(null);
     setEditName('');
+  };
+
+  const cancelImageEditing = () => {
+    setEditingImageCategory(null);
+    setEditImageUrl('');
+    setUseEditImageUrl(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const isUrl = (string) => {
@@ -232,16 +226,32 @@ const Categories = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="categoryImage">
-            Category Image
+          <label className="flex items-center text-gray-700 text-sm font-medium mb-2">
+            <input
+              type="checkbox"
+              checked={newCategory.useImageUrl}
+              onChange={(e) => setNewCategory({ ...newCategory, useImageUrl: e.target.checked, image: null, imageUrl: '' })}
+              className="mr-2"
+            />
+            Use Image URL
           </label>
-          <input
-            id="categoryImage"
-            type="file"
-            accept="image/jpeg,image/jpg,image/gif"
-            onChange={(e) => setNewCategory({ ...newCategory, image: e.target.files[0] })}
-            className="w-full p-2 border border-gray-300 rounded-md"
-          />
+          {newCategory.useImageUrl ? (
+            <input
+              type="url"
+              value={newCategory.imageUrl}
+              onChange={(e) => setNewCategory({ ...newCategory, imageUrl: e.target.value })}
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+              placeholder="Enter image URL"
+            />
+          ) : (
+            <input
+              id="categoryImage"
+              type="file"
+              accept="image/jpeg,image/jpg,image/gif"
+              onChange={(e) => setNewCategory({ ...newCategory, image: e.target.files[0], imageUrl: '' })}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+          )}
         </div>
         <button
           type="submit"
@@ -295,17 +305,80 @@ const Categories = () => {
                     )}
                   </td>
                   <td className="px-4 py-2">
-                    {category.imagen ? (
-                      <img
-                        src={isUrl(category.imagen) ? category.imagen : `${API_BASE_URL}/storage/${category.imagen}`}
-                        alt={category.nombreCategoria}
-                        className="h-12 w-12 object-cover rounded cursor-pointer"
-                        onClick={() => handleImageClick(category.idCategoria)}
-                      />
+                    {editingImageCategory === category.idCategoria ? (
+                      <div className="flex flex-col space-y-2">
+                        <label className="flex items-center text-gray-700 text-sm font-medium">
+                          <input
+                            type="checkbox"
+                            checked={useEditImageUrl}
+                            onChange={(e) => setUseEditImageUrl(e.target.checked)}
+                            className="mr-2"
+                          />
+                          Use Image URL
+                        </label>
+                        {useEditImageUrl ? (
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="url"
+                              value={editImageUrl}
+                              onChange={(e) => setEditImageUrl(e.target.value)}
+                              className="flex-grow p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                              placeholder="Enter image URL"
+                            />
+                            <button
+                              onClick={() => handleImageChange({ target: { files: [] } })}
+                              className="text-green-500 hover:text-green-600 font-medium"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={cancelImageEditing}
+                              className="text-gray-500 hover:text-gray-600 font-medium"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <span className="text-gray-400 text-sm">Select file...</span>
+                            <button
+                              onClick={() => fileInputRef.current.click()}
+                              className="text-green-500 hover:text-green-600 font-medium"
+                            >
+                              Upload
+                            </button>
+                            <button
+                              onClick={cancelImageEditing}
+                              className="text-gray-500 hover:text-gray-600 font-medium"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : category.imagen ? (
+                      <div className="flex items-center space-x-2">
+                        <img
+                          src={isUrl(category.imagen) ? category.imagen : `${API_BASE_URL}/storage/${category.imagen}`}
+                          alt={category.nombreCategoria}
+                          className="h-12 w-12 object-cover rounded cursor-pointer"
+                          onClick={() => startEditingImage(category)}
+                        />
+                        {isUrl(category.imagen) && (
+                          <a
+                            href={category.imagen}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline text-sm truncate max-w-xs"
+                          >
+                            {category.imagen}
+                          </a>
+                        )}
+                      </div>
                     ) : (
                       <span
                         className="text-gray-400 text-sm cursor-pointer"
-                        onClick={() => handleImageClick(category.idCategoria)}
+                        onClick={() => startEditingImage(category)}
                       >
                         No image
                       </span>
