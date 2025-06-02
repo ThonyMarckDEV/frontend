@@ -8,7 +8,7 @@ const Sidebar = () => {
   const sidebarRef = useRef(null);
 
   const navItems = [
-    { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true }, // Added end: true
     { to: '/admin/users', icon: Users, label: 'Usuarios' },
     { to: '/admin/categories', icon: Package, label: 'Categorias' },
     { to: '/admin/subcategories', icon: Package, label: 'SubCategorias' },
@@ -33,7 +33,7 @@ const Sidebar = () => {
     };
   }, [isOpen]);
 
-  // Close sidebar when navigating (optional, improves UX)
+  // Close sidebar when navigating
   const handleNavLinkClick = () => {
     if (isOpen) {
       setIsOpen(false);
@@ -68,6 +68,7 @@ const Sidebar = () => {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.end} // Apply end prop conditionally
               className={({ isActive }) =>
                 `flex items-center px-6 py-3 text-gray-600 hover:bg-pink-50 hover:text-pink-500 transition-colors ${
                   isActive ? 'bg-pink-50 text-pink-500' : ''
