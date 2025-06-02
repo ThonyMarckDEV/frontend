@@ -22,6 +22,8 @@ import LoginUI from './ui/Auth/Login';
 
 // UIS ADMIN
 import HomeAdmin from './ui/Admin/Home/HomeAdmin';
+import Categories from './ui/Admin/Categorias/Categories';
+import SubCategories from './ui/Admin/SubCategorias/SubCategories';
 
 // UIS Cliente
 import ProductsUI from './ui/Home/ProductsUI/Products';
@@ -33,7 +35,8 @@ import OrdersUI from './ui/Cliente/Ordenes/Orders';
 import ProtectedRouteHome from './utilities/ProtectedRouteHome';
 import ProtectedRouteCliente from './utilities/ProtectedRouteCliente';
 import ProtectedRouteAdmin from './utilities/ProtectedRouteAdmin';
-import Categories from './ui/Admin/Categorias/Categories';
+
+
 
 
 function AppContent() {
@@ -54,6 +57,7 @@ function AppContent() {
       {/* Rutas Admin */}
       <Route path="/admin" element={<ProtectedRouteAdmin element={<HomeAdmin />} />}  />
       <Route path="/admin/categories" element={<ProtectedRouteAdmin element={<Categories />} />}  />
+      <Route path="/admin/subcategories" element={<ProtectedRouteAdmin element={<SubCategories />} />}  />
 
       {/* Ruta de error */}
       <Route path="/*" element={<ErrorPage />} />

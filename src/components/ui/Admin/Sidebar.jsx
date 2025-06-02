@@ -11,6 +11,7 @@ const Sidebar = () => {
     { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/admin/users', icon: Users, label: 'Usuarios' },
     { to: '/admin/categories', icon: Package, label: 'Categorias' },
+    { to: '/admin/subcategories', icon: Package, label: 'SubCategorias' },
     { to: '/admin/products', icon: Package, label: 'Productos' },
   ];
 
