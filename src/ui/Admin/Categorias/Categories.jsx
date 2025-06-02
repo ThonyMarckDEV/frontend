@@ -134,6 +134,8 @@ const Categories = () => {
 
       const formData = new FormData();
       formData.append('fileImage', file);
+      // Add method spoofing for PUT request
+      formData.append('_method', 'PUT');
 
       const formDataEntries = [];
       for (let [key, value] of formData.entries()) {
@@ -144,9 +146,11 @@ const Categories = () => {
       }
       console.log('FormData contents:', formDataEntries);
 
+      // Change method to POST but use _method field for PUT
       const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/${editingImageCategory}/image`, {
-        method: 'PUT',
+        method: 'POST', // Changed from PUT to POST
         body: formData,
+        // Don't set Content-Type header - let the browser set it with boundary
       });
 
       const data = await response.json();
@@ -161,7 +165,7 @@ const Categories = () => {
       console.error('Error:', error);
     } finally {
       setLoadingScreen(false);
-      setEditingImageCategory(null); // Reset image editing state
+      setEditingImageCategory(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };

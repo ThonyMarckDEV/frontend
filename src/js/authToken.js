@@ -101,37 +101,19 @@ async function verificarYRenovarToken() {
   return access_token;
 }
 
-// async function fetchWithAuth(url, options = {}) {
-//   //console.log(`[API] Solicitud a: ${url}`);
-//   const access_token = await verificarYRenovarToken();
-  
-//   // console.log('[API] Enviando solicitud con token:', access_token?.substring(0, 15) + '...');
-//   const headers = {
-//     ...options.headers,
-//     Authorization: `Bearer ${access_token}`
-//   };
-  
-//   return fetch(url, { ...options, headers });
-// }
-
-async function fetchWithAuth(url, options = {}) {
-  const access_token = await verificarYRenovarToken();
-
-  const headers = {
-    ...options.headers,
-    Authorization: `Bearer ${access_token}`,
-  };
-
-  // Avoid setting Content-Type for FormData
-  if (options.body instanceof FormData) {
-    delete headers['Content-Type'];
+  async function fetchWithAuth(url, options = {}) {
+    //console.log(`[API] Solicitud a: ${url}`);
+    const access_token = await verificarYRenovarToken();
+    
+    // console.log('[API] Enviando solicitud con token:', access_token?.substring(0, 15) + '...');
+    const headers = {
+      ...options.headers,
+      Authorization: `Bearer ${access_token}`
+    };
+    
+    return fetch(url, { ...options, headers });
   }
 
-  return fetch(url, {
-    ...options,
-    headers,
-  });
-}
 
 function logout() {
   jwtUtils.removeTokensFromCookie();
