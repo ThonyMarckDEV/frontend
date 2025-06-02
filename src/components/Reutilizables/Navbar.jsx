@@ -13,11 +13,6 @@ const Navbar = () => {
   const token = jwtUtils.getRefreshTokenFromCookie();
   const rol = token ? jwtUtils.getUserRole(token) : null;
 
-  // If user is admin, hide the navbar
-  if (rol === 'admin') {
-    return null;
-  }
-
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-sm">
       <div className="container mx-auto px-4 py-4">

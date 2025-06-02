@@ -1,7 +1,8 @@
-//import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import './index.css';
 import 'react-toastify/dist/ReactToastify.css';
+import jwtUtils from './utilities/jwtUtils';
 
 //Contextos
 import { CartProvider } from './context/CartContext';
@@ -9,6 +10,7 @@ import { CartProvider } from './context/CartContext';
 //Componentes Globales
 import { ToastContainer } from 'react-toastify';
 import Navbar from './components/Reutilizables/Navbar';
+import SidebarAdmin from './components/ui/Admin/Sidebar';
 
 // Componentes Home
 import HomeUI from './ui/Home';
@@ -19,7 +21,7 @@ import ErrorPage401 from './components/ErrorPage401';
 import LoginUI from './ui/Auth/Login';
 
 // UIS ADMIN
-
+import HomeAdmin from './ui/Admin/Home/HomeAdmin';
 
 // UIS Cliente
 import ProductsUI from './ui/Home/ProductsUI/Products';
@@ -30,6 +32,7 @@ import OrdersUI from './ui/Cliente/Ordenes/Orders';
 // Utilities
 import ProtectedRouteHome from './utilities/ProtectedRouteHome';
 import ProtectedRouteCliente from './utilities/ProtectedRouteCliente';
+import ProtectedRouteAdmin from './utilities/ProtectedRouteAdmin';
 
 
 function AppContent() {
@@ -47,6 +50,9 @@ function AppContent() {
       <Route path="/cart" element={<ProtectedRouteCliente element={<CartUI />} />}  />
       <Route path="/orders" element={<ProtectedRouteCliente element={<OrdersUI />} />}  />
 
+      {/* Rutas Admin */}
+      <Route path="/admin" element={<ProtectedRouteAdmin element={<HomeAdmin />} />}  />
+
       {/* Ruta de error */}
       <Route path="/*" element={<ErrorPage />} />
       <Route path="/401" element={<ErrorPage401 />} />
@@ -55,13 +61,47 @@ function AppContent() {
 }
 
 function App() {
+  const [rol, setRol] = useState(() => {
+    const token = jwtUtils.getRefreshTokenFromCookie();
+    return token ? jwtUtils.getUserRole(token) : null;
+  });
+  const isAdmin = rol === 'admin';
+
+  // Effect to re-check the token on navigation or cookie change
+  useEffect(() => {
+    const checkToken = () => {
+      const token = jwtUtils.getRefreshTokenFromCookie();
+      const newRol = token ? jwtUtils.getUserRole(token) : null;
+      if (newRol !== rol) {
+        setRol(newRol);
+      }
+    };
+
+    // Check token immediately and on navigation
+    checkToken();
+
+    // Listen for navigation changes
+    window.addEventListener('popstate', checkToken);
+
+    // Optional: Poll for cookie changes (if cookies are set asynchronously)
+    const interval = setInterval(checkToken, 1000);
+
+    return () => {
+      window.removeEventListener('popstate', checkToken);
+      clearInterval(interval);
+    };
+  }, [rol]);
+
   return (
     <Router>
       <CartProvider>
-        <div className="min-h-screen bg-white">
-          <Navbar />
-          <AppContent />
-          <ToastContainer position="top-right" autoClose={3000} />
+        <div className="min-h-screen bg-white flex">
+          {isAdmin && <SidebarAdmin />}
+          <div className={`flex-1 ${isAdmin ? 'ml-64' : ''}`}>
+            {!isAdmin && <Navbar />}
+            <AppContent />
+            <ToastContainer position="top-right" autoClose={3000} />
+          </div>
         </div>
       </CartProvider>
     </Router>

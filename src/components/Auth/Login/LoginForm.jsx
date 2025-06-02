@@ -3,7 +3,7 @@ import { ShoppingBag, User, Lock, LogIn } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 import { toast, ToastContainer } from 'react-toastify';
 
-const LoginForm = ({ username, setUsername, password, setPassword, handleLogin, handleGoogleLogin, loading, rememberMe, setRememberMe }) => {
+const LoginForm = ({ email, setEmail, password, setPassword, handleLogin, handleGoogleLogin, loading, rememberMe, setRememberMe }) => {
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-sm">
       <div className="text-center mb-8">
@@ -17,22 +17,22 @@ const LoginForm = ({ username, setUsername, password, setPassword, handleLogin, 
       <form onSubmit={handleLogin} className="space-y-6">
         <div className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-              Usuario
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Correo Electrónico
             </label>
             <div className="mt-1 relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <User className="h-5 w-5 text-pink-400" />
               </div>
               <input
-                id="username"
-                name="username"
-                type="text"
+                id="email"
+                name="email"
+                type="email"
                 required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400"
-                placeholder="Nombre de usuario"
+                placeholder="Correo electrónico"
               />
             </div>
           </div>

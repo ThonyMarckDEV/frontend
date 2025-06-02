@@ -30,6 +30,7 @@ const Orders = () => {
   const [modalQRContent, setModalQRContent] = useState('');
   const [isCheckOrderOpen, setIsCheckOrderOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [isCancelling, setIsCancelling] = useState(false); // New state for cancellation loading
 
   const statusConfig = {
     'Pendiente de pago': { name: 'Pendiente de Pago', gif: pendingPayment, color: 'bg-amber-100 text-amber-700 border-amber-200' },
@@ -149,6 +150,7 @@ const Orders = () => {
     });
 
     if (result.isConfirmed) {
+      setIsCancelling(true); // Show loading state
       try {
         const response = await fetchWithAuth(`${API_BASE_URL}/api/cancel-order`, {
           method: 'POST',
@@ -161,18 +163,20 @@ const Orders = () => {
         const data = await response.json();
         if (response.ok && data.success) {
           toast.success('Pedido cancelado exitosamente');
-          fetchOrders();
+          await fetchOrders();
         } else {
           throw new Error(data?.message || `HTTP error! Status: ${response.status}`);
         }
       } catch (err) {
         console.error('Error cancelling order:', err);
-        toast.error('Error al cancelar el pedido');
+        toast.error('Error al cancelar el pedido: ' + err.message);
+      } finally {
+        setIsCancelling(false); // Hide loading state
       }
     }
   };
 
-  if (loading) return <FetchWithGif />;
+  if (loading || isCancelling) return <FetchWithGif />; // Show FetchWithGif during initial load or cancellation
   if (isNetworkError) return <NetworkError />;
   if (error) {
     return (
@@ -313,6 +317,7 @@ const Orders = () => {
                                   handleCancelOrder(order.idPedido);
                                 }}
                                 className="px-4 py-2 bg-red-400 hover:bg-red-500 text-white font-light rounded-full transition-colors duration-200 shadow-md hover:shadow-lg"
+                                disabled={isCancelling} // Disable button while cancelling
                               >
                                 Cancelar
                               </button>

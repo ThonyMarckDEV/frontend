@@ -11,7 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -23,7 +23,7 @@ const Login = () => {
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/login`, 
-        { username, password, remember_me: rememberMe }, 
+        { email, password, remember_me: rememberMe }, 
         { headers: { 'Content-Type': 'application/json' } }
       );
 
@@ -73,7 +73,7 @@ const Login = () => {
     if (rol === 'cliente') {
       toast.success('Login exitoso!!');
       setTimeout(() => navigate('/'), 1500);
-    }else if (rol === 'admin') {
+    } else if (rol === 'admin') {
       toast.success('Login exitoso!!');
       setTimeout(() => navigate('/admin'), 1500);
     } else {
@@ -97,8 +97,8 @@ const Login = () => {
       <div className="min-h-screen w-full overflow-auto bg-gradient-to-b from-white to-pink-300 flex items-center justify-center relative py-6">
         {loading && <FetchWithGif />}
         <LoginForm 
-          username={username}
-          setUsername={setUsername}
+          email={email}
+          setEmail={setEmail}
           password={password}
           setPassword={setPassword}
           handleLogin={handleLogin}
