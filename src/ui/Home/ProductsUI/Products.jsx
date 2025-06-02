@@ -36,7 +36,7 @@ const Products = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/categories`);
+        const response = await axios.get(`${API_BASE_URL}/api/getCategories`);
         if (response.data.success) {
           setCategories(response.data.data);
           setIsNetworkError(false);
