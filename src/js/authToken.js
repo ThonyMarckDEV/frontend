@@ -136,19 +136,16 @@ async function verificarYRenovarToken() {
 }
 
 async function fetchWithAuth(url, options = {}) {
-  try {
-    const access_token = await verificarYRenovarToken();
-    const headers = {
-      ...options.headers,
-      Authorization: `Bearer ${access_token}`,
-    };
-    return await fetch(url, { ...options, headers });
-  } catch (error) {
-    if (error.message === 'Servidor en mantenimiento') {
-      throw error; // Permitir que el llamador maneje el mantenimiento
-    }
-    throw error;
-  }
+  //console.log(`[API] Solicitud a: ${url}`);
+  const access_token = await verificarYRenovarToken();
+  
+  // console.log('[API] Enviando solicitud con token:', access_token?.substring(0, 15) + '...');
+  const headers = {
+    ...options.headers,
+    Authorization: `Bearer ${access_token}`
+  };
+  
+  return fetch(url, { ...options, headers });
 }
 
 function logout() {
