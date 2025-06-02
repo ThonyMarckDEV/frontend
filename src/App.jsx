@@ -33,6 +33,7 @@ import OrdersUI from './ui/Cliente/Ordenes/Orders';
 import ProtectedRouteHome from './utilities/ProtectedRouteHome';
 import ProtectedRouteCliente from './utilities/ProtectedRouteCliente';
 import ProtectedRouteAdmin from './utilities/ProtectedRouteAdmin';
+import Categories from './ui/Admin/Categorias/Categories';
 
 
 function AppContent() {
@@ -52,6 +53,7 @@ function AppContent() {
 
       {/* Rutas Admin */}
       <Route path="/admin" element={<ProtectedRouteAdmin element={<HomeAdmin />} />}  />
+      <Route path="/admin/categories" element={<ProtectedRouteAdmin element={<Categories />} />}  />
 
       {/* Ruta de error */}
       <Route path="/*" element={<ErrorPage />} />

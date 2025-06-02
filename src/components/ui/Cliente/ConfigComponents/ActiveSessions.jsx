@@ -13,8 +13,16 @@ const ActiveSessions = () => {
   const [deleting, setDeleting] = useState(null);
   const navigate = useNavigate();
   const [loadingScreen, setLoadingScreen] = useState(false);
+
+  // Obtener refresh_token y SesionID
   const refresh_token = jwtUtils.getRefreshTokenFromCookie();
-  const SesionID = jwtUtils.getRefreshTokenIDFromCookie(refresh_token);
+  const SesionID = jwtUtils.getRefreshTokenIDFromCookie();
+
+  // Depuración
+  useEffect(() => {
+    console.log('refresh_token:', refresh_token);
+    console.log('SesionID:', SesionID);
+  }, []);
 
   useEffect(() => {
     fetchSessions();
@@ -30,11 +38,15 @@ const ActiveSessions = () => {
       if (!response.ok) {
         throw new Error(data.message || 'Error al obtener las sesiones');
       }
+      // Depuración: Mostrar sesiones crudas
+      console.log('Sesiones recibidas:', data.sessions);
+
       // Map sessions to set is_current based on SesionID comparison
       const updatedSessions = data.sessions.map((session) => ({
         ...session,
-        is_current: session.idRefreshToken === SesionID,
+        is_current: String(session.idRefreshToken) === String(SesionID),
       }));
+      console.log('Sesiones actualizadas:', updatedSessions);
       setSessions(updatedSessions);
     } catch (error) {
       toast.error('Error al obtener las sesiones activas');
@@ -61,7 +73,7 @@ const ActiveSessions = () => {
       }
 
       toast.success('Sesión eliminada correctamente');
-      if (idRefreshToken === SesionID) {
+      if (String(idRefreshToken) === String(SesionID)) {
         jwtUtils.removeTokensFromCookie();
         navigate('/login');
         window.location.reload();

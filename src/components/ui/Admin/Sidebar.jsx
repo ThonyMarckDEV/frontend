@@ -8,6 +8,7 @@ const Sidebar = () => {
   const navItems = [
     { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/admin/users', icon: Users, label: 'Usuarios' },
+    { to: '/admin/categories', icon: Package, label: 'Categorias' },
     { to: '/admin/products', icon: Package, label: 'Productos' },
   ];
 

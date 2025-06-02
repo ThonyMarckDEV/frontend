@@ -20,7 +20,7 @@ const Categories = ({ isVisible }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/categories`);
+        const response = await axios.get(`${API_BASE_URL}/api/getCategories`);
         const result = response.data;
         if (result.success) {
           setCategories(
