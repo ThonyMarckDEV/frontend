@@ -62,6 +62,7 @@ function AppContent() {
   );
 }
 
+// Componente App corregido
 function App() {
   const [rol, setRol] = useState(() => {
     const token = jwtUtils.getRefreshTokenFromCookie();
@@ -97,9 +98,10 @@ function App() {
   return (
     <Router>
       <CartProvider>
-        <div className="min-h-screen bg-white">
+        <div className="bg-white">
           {isAdmin && <SidebarAdmin />}
-          <div className={`flex-1 ${isAdmin ? 'ml-64' : ''}`}>
+          {/* Contenido principal con margen responsivo */}
+          <div className={`flex-1 ${isAdmin ? 'md:ml-64' : ''}`}>
             {!isAdmin && <Navbar />}
             <AppContent />
             <ToastContainer position="top-right" autoClose={3000} />

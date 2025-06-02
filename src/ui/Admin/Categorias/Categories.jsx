@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Edit, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import API_BASE_URL from '../../../js/urlHelper';
@@ -10,9 +10,10 @@ const Categories = () => {
   const [loading, setLoading] = useState(false);
   const [loadingScreen, setLoadingScreen] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: '', image: null });
-  const [editingCategory, setEditingCategory] = useState(null);
+  const [editingCategory, setEditingCategory] = useState(null); // For name editing
+  const [editingImageCategory, setEditingImageCategory] = useState(null); // For image editing
   const [editName, setEditName] = useState('');
-  const [editImage, setEditImage] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchCategories();
@@ -28,6 +29,7 @@ const Categories = () => {
       if (!response.ok) {
         throw new Error(data.message || 'Error fetching categories');
       }
+      console.log('Fetched categories:', data.data);
       setCategories(data.data);
     } catch (error) {
       toast.error('Error fetching categories');
@@ -59,6 +61,8 @@ const Categories = () => {
 
       toast.success('Category added successfully');
       setNewCategory({ name: '', image: null });
+      const fileInput = document.getElementById('categoryImage');
+      if (fileInput) fileInput.value = '';
       fetchCategories();
     } catch (error) {
       toast.error('Error adding category');
@@ -71,32 +75,94 @@ const Categories = () => {
   const handleEditCategory = async (idCategoria) => {
     setLoadingScreen(true);
     try {
-      const formData = new FormData();
-      formData.append('nombreCategoria', editName);
-      if (editImage) {
-        formData.append('imagen', editImage);
+      if (!editName.trim()) {
+        toast.error('Category name cannot be empty');
+        return;
       }
 
       const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/${idCategoria}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ nombreCategoria: editName.trim() }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Error updating category name');
+      }
+
+      toast.success('Category name updated successfully');
+      setEditingCategory(null);
+      setEditName('');
+      fetchCategories();
+    } catch (error) {
+      toast.error(`Error updating category name: ${error.message}`);
+      console.error('Error:', error);
+    } finally {
+      setLoadingScreen(false);
+    }
+  };
+
+  const handleImageClick = (idCategoria) => {
+    setEditingImageCategory(idCategoria); // Set image editing state
+    fileInputRef.current.click();
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLoadingScreen(true);
+    try {
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/gif'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Invalid image format. Use JPEG, JPG, or GIF.');
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('Image size must be under 2MB.');
+        return;
+      }
+
+      console.log('Selected image:', {
+        name: file.name,
+        type: file.type,
+        size: file.size / 1024 + 'KB',
+      });
+
+      const formData = new FormData();
+      formData.append('fileImage', file);
+
+      const formDataEntries = [];
+      for (let [key, value] of formData.entries()) {
+        formDataEntries.push({
+          key,
+          value: value instanceof File ? `${value.name} (${value.type}, ${value.size} bytes)` : value,
+        });
+      }
+      console.log('FormData contents:', formDataEntries);
+
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/categories/${editingImageCategory}/image`, {
         method: 'PUT',
         body: formData,
       });
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || 'Error updating category');
+        throw new Error(data.message || 'Error updating category image');
       }
 
-      toast.success('Category updated successfully');
-      setEditingCategory(null);
-      setEditName('');
-      setEditImage(null);
+      toast.success('Category image updated successfully');
       fetchCategories();
     } catch (error) {
-      toast.error('Error updating category');
+      toast.error(`Error updating category image: ${error.message}`);
       console.error('Error:', error);
     } finally {
       setLoadingScreen(false);
+      setEditingImageCategory(null); // Reset image editing state
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -126,8 +192,18 @@ const Categories = () => {
     }
   };
 
+  const startEditing = (category) => {
+    setEditingCategory(category.idCategoria);
+    setEditName(category.nombreCategoria);
+  };
+
+  const cancelEditing = () => {
+    setEditingCategory(null);
+    setEditName('');
+  };
+
   const isUrl = (string) => {
-    return string.startsWith('http://') || string.startsWith('https://');
+    return string && (string.startsWith('http://') || string.startsWith('https://'));
   };
 
   return (
@@ -158,7 +234,7 @@ const Categories = () => {
           <input
             id="categoryImage"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/jpg,image/gif"
             onChange={(e) => setNewCategory({ ...newCategory, image: e.target.files[0] })}
             className="w-full p-2 border border-gray-300 rounded-md"
           />
@@ -170,6 +246,15 @@ const Categories = () => {
           Add Category
         </button>
       </form>
+
+      {/* Hidden File Input for Image Upload */}
+      <input
+        type="file"
+        accept="image/jpeg,image/jpg,image/gif"
+        onChange={handleImageChange}
+        className="hidden"
+        ref={fileInputRef}
+      />
 
       {/* Categories Table */}
       {loading ? (
@@ -199,68 +284,60 @@ const Categories = () => {
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         className="w-full p-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        placeholder="Category name"
                       />
                     ) : (
                       category.nombreCategoria
                     )}
                   </td>
                   <td className="px-4 py-2">
-                    {editingCategory === category.idCategoria ? (
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setEditImage(e.target.files[0])}
-                        className="w-full p-1 border border-gray-300 rounded-md"
-                      />
-                    ) : category.imagen ? (
+                    {category.imagen ? (
                       <img
                         src={isUrl(category.imagen) ? category.imagen : `${API_BASE_URL}/storage/${category.imagen}`}
                         alt={category.nombreCategoria}
-                        className="h-12 w-12 object-cover rounded"
+                        className="h-12 w-12 object-cover rounded cursor-pointer"
+                        onClick={() => handleImageClick(category.idCategoria)}
                       />
                     ) : (
-                      'No image'
+                      <span
+                        className="text-gray-400 text-sm cursor-pointer"
+                        onClick={() => handleImageClick(category.idCategoria)}
+                      >
+                        No image
+                      </span>
                     )}
                   </td>
                   <td className="px-4 py-2">
-                    {category.estado ? (
-                      <ToggleRight
-                        className="h-5 w-5 text-green-500 cursor-pointer"
-                        onClick={() => handleToggleStatus(category.idCategoria, category.estado)}
-                      />
-                    ) : (
-                      <ToggleLeft
-                        className="h-5 w-5 text-red-500 cursor-pointer"
-                        onClick={() => handleToggleStatus(category.idCategoria, category.estado)}
-                      />
-                    )}
+                    <button
+                      onClick={() => handleToggleStatus(category.idCategoria, category.estado)}
+                      className="focus:outline-none"
+                    >
+                      {category.estado ? (
+                        <ToggleRight className="h-5 w-5 text-green-500 hover:text-green-600" />
+                      ) : (
+                        <ToggleLeft className="h-5 w-5 text-red-500 hover:text-red-600" />
+                      )}
+                    </button>
                   </td>
                   <td className="px-4 py-2">
                     {editingCategory === category.idCategoria ? (
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEditCategory(category.idCategoria)}
-                          className="text-pink-500 hover:text-pink-600"
+                          className="text-green-500 hover:text-green-600 font-medium"
                         >
                           Save
                         </button>
                         <button
-                          onClick={() => {
-                            setEditingCategory(null);
-                            setEditImage(null);
-                          }}
-                          className="text-gray-500 hover:text-gray-600"
+                          onClick={cancelEditing}
+                          className="text-gray-500 hover:text-gray-600 font-medium"
                         >
                           Cancel
                         </button>
                       </div>
                     ) : (
                       <button
-                        onClick={() => {
-                          setEditingCategory(category.idCategoria);
-                          setEditName(category.nombreCategoria);
-                          setEditImage(null);
-                        }}
+                        onClick={() => startEditing(category)}
                         className="text-pink-500 hover:text-pink-600"
                       >
                         <Edit className="h-5 w-5" />
