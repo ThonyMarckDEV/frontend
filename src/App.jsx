@@ -95,7 +95,7 @@ function App() {
   return (
     <Router>
       <CartProvider>
-        <div className="min-h-screen bg-white flex">
+        <div className="min-h-screen bg-white">
           {isAdmin && <SidebarAdmin />}
           <div className={`flex-1 ${isAdmin ? 'ml-64' : ''}`}>
             {!isAdmin && <Navbar />}
