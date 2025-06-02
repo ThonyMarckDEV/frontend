@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
 import 'react-toastify/dist/ReactToastify.css';
 import jwtUtils from './utilities/jwtUtils';
+import { setMaintenanceCallback } from './js/authToken';
 
-//Contextos
+// Contextos
 import { CartProvider } from './context/CartContext';
 
-//Componentes Globales
+// Componentes Globales
 import { ToastContainer } from 'react-toastify';
 import Navbar from './components/Reutilizables/Navbar';
 import SidebarAdmin from './components/ui/Admin/Sidebar';
@@ -36,28 +37,24 @@ import ProtectedRouteHome from './utilities/ProtectedRouteHome';
 import ProtectedRouteCliente from './utilities/ProtectedRouteCliente';
 import ProtectedRouteAdmin from './utilities/ProtectedRouteAdmin';
 
-
-
-
 function AppContent() {
-
   return (
     <Routes>
       {/* Rutas públicas */}
       <Route path="/" element={<ProtectedRouteHome element={<HomeUI />} />} />
-      <Route path="/login"  element={<ProtectedRouteHome element={<LoginUI />}  />} />
+      <Route path="/login" element={<ProtectedRouteHome element={<LoginUI />} />} />
       <Route path="/products" element={<ProductsUI />} />
       <Route path="/products/:categoryId?/:subcategoryId?" element={<ProductsUI />} />
 
       {/* Rutas Cliente */}
-      <Route path="/settings" element={<ProtectedRouteCliente element={<ConfigUI />} />}  />
-      <Route path="/cart" element={<ProtectedRouteCliente element={<CartUI />} />}  />
-      <Route path="/orders" element={<ProtectedRouteCliente element={<OrdersUI />} />}  />
+      <Route path="/settings" element={<ProtectedRouteCliente element={<ConfigUI />} />} />
+      <Route path="/cart" element={<ProtectedRouteCliente element={<CartUI />} />} />
+      <Route path="/orders" element={<ProtectedRouteCliente element={<OrdersUI />} />} />
 
       {/* Rutas Admin */}
-      <Route path="/admin" element={<ProtectedRouteAdmin element={<HomeAdmin />} />}  />
-      <Route path="/admin/categories" element={<ProtectedRouteAdmin element={<Categories />} />}  />
-      <Route path="/admin/subcategories" element={<ProtectedRouteAdmin element={<SubCategories />} />}  />
+      <Route path="/admin" element={<ProtectedRouteAdmin element={<HomeAdmin />} />} />
+      <Route path="/admin/categories" element={<ProtectedRouteAdmin element={<Categories />} />} />
+      <Route path="/admin/subcategories" element={<ProtectedRouteAdmin element={<SubCategories />} />} />
 
       {/* Ruta de error */}
       <Route path="/*" element={<ErrorPage />} />
@@ -66,16 +63,25 @@ function AppContent() {
   );
 }
 
-// Componente App corregido
 function App() {
   const [rol, setRol] = useState(() => {
     const token = jwtUtils.getRefreshTokenFromCookie();
     return token ? jwtUtils.getUserRole(token) : null;
   });
+  const [maintenanceMessage, setMaintenanceMessage] = useState(null); // Add state for maintenance message
   const isAdmin = rol === 'admin';
 
   // Effect to re-check the token on navigation or cookie change
   useEffect(() => {
+    // Configurar callback para manejar mantenimiento
+    setMaintenanceCallback((isMaintenance, message) => {
+      if (isMaintenance) {
+        setMaintenanceMessage(message);
+      } else {
+        setMaintenanceMessage(null);
+      }
+    });
+
     const checkToken = () => {
       const token = jwtUtils.getRefreshTokenFromCookie();
       const newRol = token ? jwtUtils.getUserRole(token) : null;
@@ -102,6 +108,11 @@ function App() {
   return (
     <Router>
       <CartProvider>
+        {maintenanceMessage && (
+          <div className="fixed top-0 left-0 w-full bg-yellow-500 text-white p-4 text-center">
+            {maintenanceMessage}
+          </div>
+        )}
         <div className="bg-white">
           {isAdmin && <SidebarAdmin />}
           {/* Contenido principal con margen responsivo */}
