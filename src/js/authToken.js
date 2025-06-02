@@ -23,36 +23,23 @@ function isMaintenanceError(error) {
 }
 
 async function validateRefreshTokenID() {
-  let refresh_token, refresh_token_id, userID; // Declare variables
-
   try {
-    refresh_token = jwtUtils.getRefreshTokenFromCookie();
-    refresh_token_id = jwtUtils.getRefreshTokenIDFromCookie();
-    userID = jwtUtils.getUserID(refresh_token);
-  } catch (e) {
-    console.log('[Token] Error al obtener datos del refresh token:', e.message);
-    return false;
-  }
-
-  if (!refresh_token_id || !userID) {
-    console.log('[Token] No se encontró ID de refresh token o ID de usuario');
-    return false;
-  }
-
-  try {
-    const { data } = await axios.post(`${API_BASE_URL}/api/validate-refresh-token`, {
-      refresh_token_id,
-      userID,
-    });
-    return data.valid;
-  } catch (error) {
-    if (isMaintenanceError(error)) {
-      console.log('[Token] Servidor en mantenimiento, evitando validación');
-      if (onMaintenanceDetected) {
-        onMaintenanceDetected(true, error.response?.data?.message || 'El servidor está trabajando');
-      }
-      return true; // Evita el logout durante el mantenimiento
+    const refresh_token = jwtUtils.getRefreshTokenFromCookie();
+    const refresh_token_id = jwtUtils.getRefreshTokenIDFromCookie();
+    const userID = jwtUtils.getUserID(refresh_token);
+    
+    if (!refresh_token_id || !userID) {
+      console.log('[Token] No se encontró ID de refresh token o ID de usuario');
+      return false;
     }
+    
+    const response = await axios.post(`${API_BASE_URL}/api/validate-refresh-token`, {
+      refresh_token_id,
+      userID
+    });
+    
+    return response.data.valid;
+  } catch (error) {
     console.error('[Token] Error al validar ID de refresh token:', error.message);
     return false;
   }
