@@ -35,6 +35,11 @@ const LoginForm = ({ email, setEmail, password, setPassword, handleLogin, handle
                 placeholder="Correo electrónico"
               />
             </div>
+            <div className="mt-2 text-xs text-gray-500 bg-gray-100 p-2 rounded-md shadow-sm">
+              {rememberMe
+                ? 'La sesión durará 7 días al marcar "Recordarme".'
+                : 'La sesión dura 1 día por defecto. Marca "Recordarme" para 7 días.'}
+            </div>
           </div>
           
           <div>
@@ -70,7 +75,7 @@ const LoginForm = ({ email, setEmail, password, setPassword, handleLogin, handle
               className="h-4 w-4 text-pink-500 focus:ring-pink-500 border-gray-300 rounded"
             />
             <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-              Recordarme
+              Recordarme (7 Dias)
             </label>
           </div>
           
@@ -106,6 +111,9 @@ const LoginForm = ({ email, setEmail, password, setPassword, handleLogin, handle
       </form>
 
       <div className="mt-4">
+        <div className="text-center text-xs text-gray-500 bg-gray-100 p-2 rounded-md shadow-sm mb-2">
+          La sesión con Google dura 1 día por defecto.
+        </div>
         <GoogleLogin
           onSuccess={handleGoogleLogin}
           onError={() => {
